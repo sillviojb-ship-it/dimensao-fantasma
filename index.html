@@ -3,164 +3,175 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quiz Ceifador 💀 – Dimensão do Terror</title>
+  <title>Dimensão Fantasma 💀 Portal Oficial</title>
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&display=swap" rel="stylesheet">
   <style>
+    :root { --vermelho: #ff1a1a; --vinho: #4b0000; }
     body {
       background: #000 url('https://images.unsplash.com/photo-1507499739999-097706ad8914?auto=format&fit=crop&q=80') center/cover fixed;
-      color: #ffcccc; font-family: 'Special Elite', cursive; margin: 0; padding: 0; overflow-x: hidden; min-height: 100vh; position: relative;
+      color: #ffcccc; font-family: 'Special Elite', cursive; margin: 0; padding: 0; overflow-x: hidden;
     }
-    body::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,0.8), rgba(80,0,0,0.4)); z-index: 1; }
+    body::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 1; pointer-events: none; }
     
-    /* ANIMAÇÃO DE TREMOR PARA ERRO */
-    @keyframes shake {
-      0% { transform: translate(1px, 1px) rotate(0deg); }
-      10% { transform: translate(-1px, -2px) rotate(-1deg); }
-      20% { transform: translate(-3px, 0px) rotate(1deg); }
-      30% { transform: translate(3px, 2px) rotate(0deg); }
-      40% { transform: translate(1px, -1px) rotate(1deg); }
-      50% { transform: translate(-1px, 2px) rotate(-1deg); }
-      60% { transform: translate(-3px, 1px) rotate(0deg); }
-      70% { transform: translate(3px, 1px) rotate(-1deg); }
-      80% { transform: translate(-1px, -1px) rotate(1deg); }
-      90% { transform: translate(1px, 2px) rotate(0deg); }
-      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    .container { position: relative; z-index: 2; max-width: 800px; margin: 0 auto; padding: 20px; text-align: center; }
+    h1 { font-family: 'Creepster', cursive; font-size: clamp(2.5rem, 8vw, 5rem); color: var(--vermelho); text-shadow: 0 0 20px var(--vinho); margin: 20px 0; }
+    
+    .card { background: rgba(20,0,0,0.9); border: 2px solid var(--vinho); padding: 20px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+    
+    button, input, select, textarea { 
+      width: 90%; max-width: 400px; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--vinho);
+      background: #1a0000; color: #ffcccc; font-family: inherit; font-size: 1.1rem;
     }
-    .shake { animation: shake 0.5s; background-color: rgba(139, 0, 0, 0.5) !important; }
-
-    .container { position: relative; z-index: 2; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; }
-    h1 { font-family: 'Creepster', cursive; font-size: clamp(2.5rem, 8vw, 6rem); color: #ff1a1a; text-shadow: 0 0 30px #8b0000; margin-bottom: 1.5rem; }
-    input, select, button { width: 100%; max-width: 450px; padding: 1.2rem; margin: 0.5rem 0; font-size: 1.1rem; background: rgba(30,0,0,0.8); border: 2px solid #8b0000; color: #ffcccc; border-radius: 10px; font-family: inherit; }
-    button { background: linear-gradient(45deg, #4b0000, #8b0000); cursor: pointer; border: none; font-weight: bold; transition: 0.3s; }
-    .option { width: 100%; max-width: 450px; padding: 1.1rem; background: rgba(40,0,0,0.8); border: 2px solid #8b0000; margin: 0.4rem 0; cursor: pointer; border-radius: 8px; }
-    #quiz-section, #end-section, #balloon { display: none; }
-    #balloon { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20,0,0,0.98); padding: 2rem; border-radius: 15px; border: 3px solid #ff0000; z-index: 100; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 0 100px #ff0000; }
+    button { background: linear-gradient(45deg, var(--vinho), var(--vermelho)); color: white; border: none; cursor: pointer; font-weight: bold; }
+    
+    .option { background: rgba(40,0,0,0.6); padding: 15px; margin: 8px auto; border: 1px solid var(--vinho); border-radius: 8px; cursor: pointer; transition: 0.3s; max-width: 400px; }
+    .option:hover { background: var(--vermelho); color: black; }
+    
+    #quiz-game, #balloon { display: none; }
+    #balloon { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a0000; border: 3px solid var(--vermelho); padding: 25px; z-index: 1000; width: 80%; border-radius: 15px; box-shadow: 0 0 50px #000; }
+    
+    .lista-filmes { text-align: left; background: #000; padding: 15px; border-radius: 8px; border-left: 4px solid var(--vermelho); font-size: 0.9rem; line-height: 1.6; max-height: 300px; overflow-y: auto; }
+    
+    @keyframes shake { 0% {transform: translate(1px, 1px);} 20% {transform: translate(-3px, 0px);} 40% {transform: translate(1px, -1px);} 100% {transform: translate(0,0);} }
+    .shake { animation: shake 0.4s; background: rgba(255,0,0,0.2) !important; }
+    
+    .admin-trigger { color: #222; font-size: 10px; cursor: pointer; margin-top: 50px; display: block; text-decoration: none; }
   </style>
 </head>
-<body id="game-body">
+<body id="main-body">
 
-  <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-    <button id="soundToggle" onclick="iniciarMusica()" style="width: auto; padding: 10px;">🔊 ATIVAR SOM</button>
-  </div>
+<div class="container">
+    <h1>Dimensão Fantasma 💀</h1>
 
-  <div class="container" id="landing">
-    <h1>Quiz Ceifador 💀</h1>
-    <input type="text" id="nome" placeholder="Seu nome, Alma..." maxlength="25">
-    <select id="tema">
-      <option value="filmes">Filmes de Terror</option>
-      <option value="lendas">Lendas Urbanas</option>
-      <option value="creepypasta">Creepypastas</option>
-      <option value="misto">Misto</option>
-    </select>
-    <select id="qtd">
-      <option value="10">10 perguntas</option>
-      <option value="15" selected>15 perguntas</option>
-      <option value="20">20 perguntas</option>
-    </select>
-    <button onclick="iniciarQuiz()">Entrar no Abismo</button>
-  </div>
+    <div class="card">
+        <h2 style="color: var(--vermelho);">📺 Programação de Hoje</h2>
+        <div class="lista-filmes" id="display-lista">
+            Aguardando sinal da Dimensão...
+        </div>
+        <button onclick="window.location.href='https://t.me/+ewlyVq2Rsno3NGMx'" style="margin-top:15px; font-size: 0.9rem;">ENTRAR NO TELEGRAM</button>
+    </div>
 
-  <div class="container" id="quiz-section">
-    <div id="pergunta" style="font-size:1.6rem; margin: 1.5rem 0; min-height: 100px;"></div>
-    <div id="opcoes"></div>
-    <div id="score" style="margin-top: 15px; color: #ff0000; font-weight: bold;">Almas: 0</div>
-  </div>
+    <div class="card" id="quiz-init">
+        <h2 style="color: var(--vermelho);">💀 Desafio do Ceifador</h2>
+        <p>Você tem coragem de testar seus conhecimentos?</p>
+        <input type="text" id="nome-player" placeholder="Seu nome, Alma...">
+        <select id="tema-quiz">
+            <option value="filmes">Filmes de Terror</option>
+            <option value="lendas">Lendas Urbanas</option>
+            <option value="creepypasta">Creepypastas</option>
+            <option value="misto">Modo Misto</option>
+        </select>
+        <button onclick="iniciarQuiz()">INICIAR RITUAL</button>
+    </div>
 
-  <div id="balloon">
+    <div class="card" id="quiz-game">
+        <div id="pergunta" style="font-size: 1.3rem; margin-bottom: 20px;"></div>
+        <div id="opcoes"></div>
+        <div id="score" style="color: var(--vermelho); font-weight: bold; margin-top: 15px;">Almas Ceifadas: 0</div>
+    </div>
+
+    <a class="admin-trigger" onclick="abrirAdmin()">. . .</a>
+    <div id="painel-admin" style="display:none;" class="card">
+        <h3 style="color: var(--vermelho);">📡 TRANSMISSOR DE SINAIS</h3>
+        <input type="password" id="senha-admin" placeholder="Chave Mestra">
+        <textarea id="texto-sinal" rows="10" placeholder="Cole a lista de filmes aqui..."></textarea>
+        <button onclick="enviarSinal()">DISPARAR PARA TELEGRAM</button>
+    </div>
+</div>
+
+<div id="balloon">
     <p id="balloon-text" style="font-size: 1.2rem;"></p>
-    <button onclick="proxima()">Continuar</button>
-  </div>
+    <button onclick="proximaPergunta()">CONTINUAR</button>
+</div>
 
-  <div class="container" id="end-section">
-    <h1>Fim 💀</h1>
-    <div id="resultado"></div>
-    <button onclick="location.reload()">Recomeçar</button>
-  </div>
+<script>
+// --- BANCO DE PERGUNTAS (Resumido para o exemplo, use as 60 do anterior) ---
+const perguntas = {
+    filmes: [
+        { q: "Quem é o vilão de Halloween?", ops: ["Jason", "Michael Myers", "Freddy", "Ghostface"], r: "Michael Myers" },
+        { q: "Qual o nome da boneca maldita?", ops: ["Annabelle", "Tiffany", "Brahms", "Samara"], r: "Annabelle" }
+        // ... adicione as outras que te enviei
+    ],
+    lendas: [
+        { q: "Qual lenda tem pés para trás?", ops: ["Curupira", "Saci", "Iara", "Cuca"], r: "Curupira" }
+    ],
+    creepypasta: [
+        { q: "Qual a frase de Jeff the Killer?", ops: ["Go to sleep", "Smile", "Die", "Good night"], r: "Go to sleep" }
+    ]
+};
 
-  <script>
-    // ARQUIVOS DE ÁUDIO
-    const somAcerto = new Audio('https://www.myinstants.com/media/sounds/level-up-v2.mp3');
-    const somErro = new Audio('https://www.myinstants.com/media/sounds/evil-laugh.mp3'); // RIZADA MALÉFICA
-    const trilha = new Audio('https://www.myinstants.com/media/sounds/horror-background-music.mp3');
-    trilha.loop = true;
+// --- LÓGICA DO QUIZ ---
+let listaAtiva = [], idx = 0, pontos = 0;
+const s_erro = new Audio('https://www.myinstants.com/media/sounds/evil-laugh.mp3');
+const s_acerto = new Audio('https://www.myinstants.com/media/sounds/ding-sound-effect_1.mp3');
 
-    function iniciarMusica() {
-        trilha.play();
-        document.getElementById('soundToggle').style.display = 'none';
+function iniciarQuiz() {
+    const t = document.getElementById('tema-quiz').value;
+    let base = t === 'misto' ? [...perguntas.filmes, ...perguntas.lendas, ...perguntas.creepypasta] : [...perguntas[t]];
+    listaAtiva = base.sort(() => Math.random() - 0.5).slice(0, 15);
+    document.getElementById('quiz-init').style.display = 'none';
+    document.getElementById('quiz-game').style.display = 'block';
+    renderizar();
+}
+
+function renderizar() {
+    if(idx >= listaAtiva.length) {
+        document.getElementById('quiz-game').innerHTML = `<h2>RITUAL COMPLETO</h2><p>Você ceifou ${pontos} almas!</p><button onclick="location.reload()">RECOMEÇAR</button>`;
+        return;
     }
-
-    const perguntas = {
-      filmes: [
-        { q: "Quem possui Regan em O Exorcista?", ops: ["Pazuzu", "Cairne", "Belzebu", "Valak"], r: "Pazuzu", ex: "Pazuzu é o demônio da mitologia mesopotâmica." },
-        { q: "Qual a regra nº 1 de Zombieland?", ops: ["Double Tap", "Cardio", "Cuidado com Banheiros", "Cinto de Segurança"], r: "Cardio", ex: "Regra fundamental para fugir dos mortos-vivos." },
-        { q: "Qual o nome da boneca em Invocação do Mal?", ops: ["Tiffany", "Annabelle", "Chucky", "Samara"], r: "Annabelle", ex: "Inspirada num caso real dos Warren." }
-        // Adicione as outras perguntas aqui seguindo o padrão...
-      ],
-      lendas: [
-          { q: "Onde vive a Matinta Pereira?", ops: ["Amazónia", "Pampas", "Cerrado", "Pantanal"], r: "Amazónia", ex: "Lenda nortista de uma velha feiticeira." }
-      ],
-      creepypasta: [
-          { q: "Qual a frase do Jeff the Killer?", ops: ["Go to Sleep", "Sweet Dreams", "Die", "Smile"], r: "Go to Sleep", ex: "Dita antes de atacar as suas vítimas." }
-      ]
-    };
-
-    let lista = [], idx = 0, pts = 0;
-
-    function iniciarQuiz() {
-      iniciarMusica();
-      const t = document.getElementById('tema').value;
-      const total = parseInt(document.getElementById('qtd').value);
-      let base = t === 'misto' ? [...perguntas.filmes, ...perguntas.lendas, ...perguntas.creepypasta] : [...perguntas[t]];
-      lista = base.sort(() => Math.random() - 0.5).slice(0, total);
-      document.getElementById('landing').style.display = 'none';
-      document.getElementById('quiz-section').style.display = 'flex';
-      render();
-    }
-
-    function render() {
-      if(idx >= lista.length) return fim();
-      const qObj = lista[idx];
-      document.getElementById('pergunta').textContent = qObj.q;
-      const box = document.getElementById('opcoes');
-      box.innerHTML = '';
-      qObj.ops.forEach(o => {
+    const q = listaAtiva[idx];
+    document.getElementById('pergunta').textContent = q.q;
+    const box = document.getElementById('opcoes');
+    box.innerHTML = '';
+    q.ops.forEach(op => {
         const d = document.createElement('div');
         d.className = 'option';
-        d.textContent = o;
-        d.onclick = () => checar(o);
+        d.textContent = op;
+        d.onclick = () => {
+            if(op === q.r) {
+                pontos++; s_acerto.play();
+                document.getElementById('score').textContent = `Almas Ceifadas: ${pontos}`;
+                idx++; renderizar();
+            } else {
+                s_erro.play();
+                document.getElementById('main-body').classList.add('shake');
+                document.getElementById('balloon-text').innerHTML = `💀 <b>ERROU!</b><br>A correta era: ${q.r}`;
+                document.getElementById('balloon').style.display = 'block';
+                setTimeout(() => document.getElementById('main-body').classList.remove('shake'), 400);
+            }
+        };
         box.appendChild(d);
-      });
-    }
+    });
+}
 
-    function checar(escolha) {
-      const qObj = lista[idx];
-      const body = document.getElementById('game-body');
+function proximaPergunta() {
+    document.getElementById('balloon').style.display = 'none';
+    idx++; renderizar();
+}
 
-      if(escolha === qObj.r) {
-        pts++;
-        somAcerto.play();
-        document.getElementById('score').textContent = `Almas: ${pts}`;
-        idx++; render();
-      } else {
-        // EFEITO DE ERRO
-        somErro.play();
-        body.classList.add('shake'); // Treme a tela
-        document.getElementById('balloon-text').innerHTML = `<span style="font-size:2rem">💀</span><br><b>SUA ALMA É MINHA!</b><br><br>A correta era: ${qObj.r}`;
-        document.getElementById('balloon').style.display = 'block';
-        setTimeout(() => body.classList.remove('shake'), 500);
-      }
-    }
+// --- LÓGICA ADMIN E TELEGRAM ---
+function abrirAdmin() {
+    let p = prompt("SENHA DE ACESSO:");
+    if(p === "1234") document.getElementById('painel-admin').style.display = 'block';
+}
 
-    function proxima() {
-      document.getElementById('balloon').style.display = 'none';
-      idx++; render();
-    }
+async function enviarSinal() {
+    const texto = document.getElementById('texto-sinal').value;
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzunSGBT4qE9hyH2Ieh4RGeJxrfE5qmJDHsLkJ4t6BHm7pxHUX5H86KtA2WEDB8IVuNzA/exec";
+    
+    // Atualiza a visualização no site na hora
+    document.getElementById('display-lista').innerText = texto;
+    localStorage.setItem('ultima_lista', texto);
 
-    function fim() {
-      document.getElementById('quiz-section').style.display = 'none';
-      document.getElementById('end-section').style.display = 'flex';
-      document.getElementById('resultado').textContent = `Você ceifou ${pts} almas!`;
-    }
-  </script>
+    await fetch(scriptURL, { method: "POST", mode: "no-cors", body: JSON.stringify({ texto: texto }) });
+    alert("SINAL ENVIADO!");
+}
+
+// Carregar última lista ao abrir
+window.onload = () => {
+    const salva = localStorage.getItem('ultima_lista');
+    if(salva) document.getElementById('display-lista').innerText = salva;
+}
+</script>
 </body>
 </html>
