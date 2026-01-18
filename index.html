@@ -1,1 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Quiz Fantasma 👻</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<style>
+body{
+  margin:0;
+  background:#0a0a0a;
+  color:#e0e0e0;
+  font-family:Arial,sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+.container{
+  width:100%;
+  max-width:500px;
+  background:#111;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 0 25px rgba(0,0,0,.8);
+}
+h1{text-align:center;}
+select,input,button{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:6px;
+  border:none;
+  font-size:1em;
+}
+button{
+  background:#5c0f14;
+  color:#fff;
+  cursor:pointer;
+}
+button:hover{background:#7a1319;}
+.opcao{
+  background:#1b1b1b;
+  padding:12px;
+  margin:8px 0;
+  border-radius:6px;
+  cursor:pointer;
+}
+.opcao:hover{background:#2a2a2a;}
+.timer{
+  text-align:right;
+  color:#f1c40f;
+}
+.aviso{
+  color:#f1c40f;
+  font-size:.85em;
+  text-align:center;
+}
+.ranking{
+  font-size:.9em;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+<div class="container" id="app">
+
+<h1>Quiz Fantasma 👻</h1>
+
+<div class="aviso">
+Nome opcional — apenas para o Ranking Fantasma
+</div>
+
+<input id="nome" placeholder="Seu nome (opcional)">
+
+<select id="tema">
+<option value="espiritos">Espíritos</option>
+<option value="demonios">Demônios</option>
+<option value="misterios">Mistérios</option>
+</select>
+
+<select id="quantidade">
+<option value="10">10 Perguntas</option>
+<option value="15">15 Perguntas</option>
+<option value="20">20 Perguntas</option>
+</select>
+
+<button onclick="iniciar()">Iniciar Quiz</button>
+
+</div>
+
+<script>
+const TEMPO_PADRAO = 15;
+let tempo, timer;
+let atual=0,pontos=0,quiz=[];
+let nomeJogador="";
+
+const banco = {
+ espiritos:[
+  {q:"Espíritos aparecem mais em qual horário?",o:["Manhã","Meia-noite","Tarde"],c:1},
+  {q:"Um espírito preso é chamado de?",o:["Obsessor","Alma","Anjo"],c:0}
+ ],
+ demonios:[
+  {q:"Qual símbolo é usado para invocação?",o:["Cruz","Pentagrama","Lua"],c:1},
+  {q:"Demônios são associados a?",o:["Luz","Sombras","Água"],c:1}
+ ],
+ misterios:[
+  {q:"Triângulo das Bermudas é conhecido por?",o:["Naufrágios","Vulcões","Neve"],c:0},
+  {q:"Objetos que se movem sozinhos?",o:["Ilusão","Poltergeist","Sonho"],c:1}
+ ]
+};
+
+function iniciar(){
+ nomeJogador=document.getElementById("nome").value || "Anônimo";
+ const tema=document.getElementById("tema").value;
+ const qtd=parseInt(document.getElementById("quantidade").value);
+
+ quiz=[...banco[tema]];
+ while(quiz.length<qtd) quiz=quiz.concat(banco[tema]);
+ quiz=quiz.slice(0,qtd);
+
+ atual=0; pontos=0;
+ mostrar();
+}
+
+function mostrar(){
+ tempo=TEMPO_PADRAO;
+ const p=quiz[atual];
+ document.getElementById("app").innerHTML=`
+ <div class="timer">⏱️ ${tempo}s</div>
+ <h3>${p.q}</h3>
+ ${p.o.map((op,i)=>`<div class="opcao" onclick="responder(${i})">${op}</div>`).join("")}
+ `;
+ timer=setInterval(()=>{
+  tempo--;
+  document.querySelector(".timer").innerText=`⏱️ ${tempo}s`;
+  if(tempo<=0){clearInterval(timer); responder(-1);}
+ },1000);
+}
+
+function responder(i){
+ clearInterval(timer);
+ if(i===quiz[atual].c) pontos++;
+ atual++;
+ atual<quiz.length?mostrar():finalizar();
+}
+
+function finalizar(){
+ salvarRanking();
+ document.getElementById("app").innerHTML=`
+ <h2>Resultado Final</h2>
+ <p>${nomeJogador}, você acertou ${pontos} de ${quiz.length}</p>
+ <button onclick="compartilhar()">Compartilhar</button>
+ <div class="ranking">${mostrarRanking()}</div>
+ <button onclick="location.reload()">Jogar novamente</button>
+ `;
+}
+
+function salvarRanking(){
+ let r=JSON.parse(localStorage.getItem("rankingFantasma")||"[]");
+ r.push({nome:nomeJogador,pontos});
+ r.sort((a,b)=>b.pontos-a.pontos);
+ r=r.slice(0,10);
+ localStorage.setItem("rankingFantasma",JSON.stringify(r));
+}
+
+function mostrarRanking(){
+ const r=JSON.parse(localStorage.getItem("rankingFantasma")||"[]");
+ return "<h3>🏆 Ranking Fantasma</h3>"+r.map((e,i)=>`${i+1}. ${e.nome} - ${e.pontos}`).join("<br>");
+}
+
+function compartilhar(){
+ const texto=`Eu enfrentei o Quiz Fantasma 👻 e fiz ${pontos} pontos!`;
+ if(navigator.share){
+  navigator.share({text:texto});
+ }else{
+  alert("Compartilhamento não suportado neste navegador");
+ }
+}
+</script>
+
+</body>
+</html>
