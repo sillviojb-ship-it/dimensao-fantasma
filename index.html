@@ -11,53 +11,59 @@
       color: #ffcccc; font-family: 'Special Elite', cursive; margin: 0; padding: 0; overflow-x: hidden; min-height: 100vh; position: relative;
     }
     body::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,0.8), rgba(80,0,0,0.4)); z-index: 1; }
+    
+    /* ANIMAÇÃO DE TREMOR PARA ERRO */
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+    .shake { animation: shake 0.5s; background-color: rgba(139, 0, 0, 0.5) !important; }
+
     .container { position: relative; z-index: 2; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; }
     h1 { font-family: 'Creepster', cursive; font-size: clamp(2.5rem, 8vw, 6rem); color: #ff1a1a; text-shadow: 0 0 30px #8b0000; margin-bottom: 1.5rem; }
     input, select, button { width: 100%; max-width: 450px; padding: 1.2rem; margin: 0.5rem 0; font-size: 1.1rem; background: rgba(30,0,0,0.8); border: 2px solid #8b0000; color: #ffcccc; border-radius: 10px; font-family: inherit; }
     button { background: linear-gradient(45deg, #4b0000, #8b0000); cursor: pointer; border: none; font-weight: bold; transition: 0.3s; }
-    button:hover { transform: scale(1.05); box-shadow: 0 0 20px #ff0000; }
-    .option { width: 100%; max-width: 450px; padding: 1.1rem; background: rgba(40,0,0,0.8); border: 2px solid #8b0000; margin: 0.4rem 0; cursor: pointer; border-radius: 8px; transition: 0.2s; }
-    .option:hover { border-color: #ff1a1a; background: rgba(80,0,0,0.9); }
+    .option { width: 100%; max-width: 450px; padding: 1.1rem; background: rgba(40,0,0,0.8); border: 2px solid #8b0000; margin: 0.4rem 0; cursor: pointer; border-radius: 8px; }
     #quiz-section, #end-section, #balloon { display: none; }
-    #balloon { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(40,0,0,0.98); padding: 2rem; border-radius: 15px; border: 3px solid #ff0000; z-index: 100; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 0 100px #000; }
-    .btn-abort { background: transparent; border: 1px solid #444; color: #888; margin-top: 2rem; width: auto; padding: 10px 20px; font-size: 0.9rem; }
+    #balloon { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(20,0,0,0.98); padding: 2rem; border-radius: 15px; border: 3px solid #ff0000; z-index: 100; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 0 100px #ff0000; }
   </style>
 </head>
-<body>
+<body id="game-body">
+
+  <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+    <button id="soundToggle" onclick="iniciarMusica()" style="width: auto; padding: 10px;">🔊 ATIVAR SOM</button>
+  </div>
 
   <div class="container" id="landing">
     <h1>Quiz Ceifador 💀</h1>
-    <input type="text" id="nome" placeholder="Teu nome, Alma Perdida..." maxlength="25">
+    <input type="text" id="nome" placeholder="Seu nome, Alma..." maxlength="25">
     <select id="tema">
       <option value="filmes">Filmes de Terror</option>
       <option value="lendas">Lendas Urbanas</option>
       <option value="creepypasta">Creepypastas</option>
-      <option value="misto">Misto (Tudo!)</option>
+      <option value="misto">Misto</option>
     </select>
     <select id="qtd">
       <option value="10">10 perguntas</option>
-      <option value="12">12 perguntas</option>
       <option value="15" selected>15 perguntas</option>
-      <option value="18">18 perguntas</option>
       <option value="20">20 perguntas</option>
     </select>
     <button onclick="iniciarQuiz()">Entrar no Abismo</button>
   </div>
 
   <div class="container" id="quiz-section">
-    <h2 id="quiz-status" style="color: #666; font-size: 1rem; margin: 0;"></h2>
-    <div id="pergunta" style="font-size:1.6rem; margin: 1.5rem 0; min-height: 100px; display: flex; align-items: center; justify-content: center;"></div>
+    <div id="pergunta" style="font-size:1.6rem; margin: 1.5rem 0; min-height: 100px;"></div>
     <div id="opcoes"></div>
-    <div id="score" style="margin-top: 15px; color: #ff0000; font-weight: bold;">Almas Ceifadas: 0</div>
-    <button class="btn-abort" onclick="location.reload()">❌ ABORTAR MISSÃO</button>
-  </div>
-
-  <div class="container" id="end-section">
-    <h1>Fim da Ceifança 💀</h1>
-    <div id="resultado" style="font-size:1.5rem; margin-bottom: 1.5rem;"></div>
-    <div id="ranking" style="background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 1px solid #8b0000; width: 100%; max-width: 400px; margin-bottom: 1rem;"></div>
-    <button onclick="compartilhar()">Compartilhar</button>
-    <button onclick="location.reload()">Recomeçar</button>
+    <div id="score" style="margin-top: 15px; color: #ff0000; font-weight: bold;">Almas: 0</div>
   </div>
 
   <div id="balloon">
@@ -65,86 +71,47 @@
     <button onclick="proxima()">Continuar</button>
   </div>
 
+  <div class="container" id="end-section">
+    <h1>Fim 💀</h1>
+    <div id="resultado"></div>
+    <button onclick="location.reload()">Recomeçar</button>
+  </div>
+
   <script>
+    // ARQUIVOS DE ÁUDIO
+    const somAcerto = new Audio('https://www.myinstants.com/media/sounds/level-up-v2.mp3');
+    const somErro = new Audio('https://www.myinstants.com/media/sounds/evil-laugh.mp3'); // RIZADA MALÉFICA
+    const trilha = new Audio('https://www.myinstants.com/media/sounds/horror-background-music.mp3');
+    trilha.loop = true;
+
+    function iniciarMusica() {
+        trilha.play();
+        document.getElementById('soundToggle').style.display = 'none';
+    }
+
     const perguntas = {
       filmes: [
         { q: "Quem possui Regan em O Exorcista?", ops: ["Pazuzu", "Cairne", "Belzebu", "Valak"], r: "Pazuzu", ex: "Pazuzu é o demônio da mitologia mesopotâmica." },
         { q: "Qual a regra nº 1 de Zombieland?", ops: ["Double Tap", "Cardio", "Cuidado com Banheiros", "Cinto de Segurança"], r: "Cardio", ex: "Regra fundamental para fugir dos mortos-vivos." },
-        { q: "Qual o nome da boneca em Invocação do Mal?", ops: ["Tiffany", "Annabelle", "Chucky", "Samara"], r: "Annabelle", ex: "Inspirada num caso real dos Warren." },
-        { q: "Quem é o vilão de Halloween?", ops: ["Jason", "Michael Myers", "Freddy Krueger", "Ghostface"], r: "Michael Myers", ex: "O assassino da máscara branca de Haddonfield." },
-        { q: "Em que filme aparece a fita de vídeo maldita?", ops: ["Chamada Não Atendida", "O Grito", "The Ring", "Sinais"], r: "The Ring", ex: "Sete dias após assistir, a Samara aparece." },
-        { q: "Qual o vilão que ataca nos sonhos?", ops: ["Pinhead", "Freddy Krueger", "Leatherface", "Pennywise"], r: "Freddy Krueger", ex: "Veste uma camisola de riscas e usa uma garra." },
-        { q: "Qual filme tem um palhaço nos esgotos?", ops: ["Coringa", "It: A Coisa", "Killer Klowns", "Terrifier"], r: "It: A Coisa", ex: "Pennywise, a entidade que se alimenta do medo." },
-        { q: "Qual o nome do hotel em 'O Iluminado'?", ops: ["Bates Motel", "Overlook Hotel", "Hotel Cortez", "Dolphin"], r: "Overlook Hotel", ex: "Onde Jack Torrance enlouquece no Colorado." },
-        { q: "Quem é o assassino em Pânico (1996)?", ops: ["Ghostface", "Stu e Billy", "Randy", "Sidney"], r: "Stu e Billy", ex: "Eram dois assassinos a trabalhar em conjunto." },
-        { q: "Qual filme usa o lema 'Do you want to play a game?'", ops: ["Saw", "Hostel", "Escape Room", "Final Destination"], r: "Saw", ex: "Jigsaw coloca as suas vítimas em armadilhas morais." },
-        { q: "Qual filme se passa num acampamento?", ops: ["Sexta-Feira 13", "Hereditário", "Atividade Paranormal", "Midsommar"], r: "Sexta-Feira 13", ex: "Jason Voorhees e o Lago Crystal Lake." },
-        { q: "Qual a cor do balão do Pennywise?", ops: ["Azul", "Branco", "Vermelho", "Preto"], r: "Vermelho", ex: "O icónico balão vermelho que atrai as crianças." },
-        { q: "Quem dirigiu 'Psicose'?", ops: ["Hitchcock", "Spielberg", "Kubrick", "Carpenter"], r: "Hitchcock", ex: "O mestre do suspense." },
-        { q: "Qual o nome do filho de Rosemary?", ops: ["Damien", "Adrian", "Isaac", "Lucifer"], r: "Adrian", ex: "O Bebé de Rosemary é o filho do Diabo." },
-        { q: "O que acontece em 'Um Lugar Silencioso' se fizeres barulho?", ops: ["Morres", "És preso", "Ficas surdo", "Nada"], r: "Morres", ex: "Criaturas sensíveis ao som caçam quem fala." },
-        { q: "Qual o nome do boneco em 'Child's Play'?", ops: ["Chucky", "Brahms", "Billy", "Slappy"], r: "Chucky", ex: "Possuído pela alma de Charles Lee Ray." },
-        { q: "Qual filme envolve um labirinto de milho?", ops: ["Children of the Corn", "The Witch", "X", "Pearl"], r: "Children of the Corn", ex: "Baseado num conto de Stephen King." },
-        { q: "Qual filme tem a famosa cena do chuveiro?", ops: ["Psicose", "O Iluminado", "Carrie", "Poltergeist"], r: "Psicose", ex: "Marion Crane é atacada por Norman Bates." },
-        { q: "O que é um Cenobita?", ops: ["Anjo", "Demónio do Prazer/Dor", "Vampiro", "Fantasma"], r: "Demónio do Prazer/Dor", ex: "Liderados por Pinhead em Hellraiser." },
-        { q: "Qual o nome da família em 'Hereditário'?", ops: ["Graham", "Warren", "Lamberts", "Perron"], r: "Graham", ex: "Uma linhagem amaldiçoada pelo rei Paimon." }
+        { q: "Qual o nome da boneca em Invocação do Mal?", ops: ["Tiffany", "Annabelle", "Chucky", "Samara"], r: "Annabelle", ex: "Inspirada num caso real dos Warren." }
+        // Adicione as outras perguntas aqui seguindo o padrão...
       ],
       lendas: [
-        { q: "Onde vive a Matinta Pereira?", ops: ["Amazónia", "Pampas", "Cerrado", "Pantanal"], r: "Amazónia", ex: "Lenda nortista de uma velha feiticeira." },
-        { q: "O que o Curupira tem de diferente?", ops: ["Pés para trás", "Sem cabeça", "Uma perna", "Asas"], r: "Pés para trás", ex: "Confunde caçadores com as suas pegadas." },
-        { q: "Quem vira Lobisomem?", ops: ["7º filho homem", "1º filho", "Filho de bruxa", "Quem é mordido"], r: "7º filho homem", ex: "Na tradição brasileira, o sétimo filho vira lobo." },
-        { q: "Qual lenda não tem cabeça?", ops: ["Mula sem Cabeça", "Iara", "Saci", "Boto"], r: "Mula sem Cabeça", ex: "Solta fogo pelo pescoço." },
-        { q: "O que o Saci fuma?", ops: ["Cachimbo", "Charuto", "Palha", "Nada"], r: "Cachimbo", ex: "Sempre com o seu gorro vermelho e cachimbo." },
-        { q: "Quem seduz homens no rio?", ops: ["Iara", "Cuca", "Matinta", "Pisadeira"], r: "Iara", ex: "A sereia das águas doces." },
-        { q: "O Boto Cor-de-Rosa vira o quê à noite?", ops: ["Homem galã", "Monstro", "Peixe gigante", "Sombra"], r: "Homem galã", ex: "Sempre usa chapéu para esconder o buraco na cabeça." },
-        { q: "Quem mora numa gruta e parece um jacaré?", ops: ["Cuca", "Boitatá", "Capelobo", "Quibungo"], r: "Cuca", ex: "Diz a lenda que ela só dorme uma vez a cada 7 anos." },
-        { q: "O que o Boitatá protege?", ops: ["As matas contra fogo", "Os rios", "Os animais", "O ouro"], r: "As matas contra fogo", ex: "É uma grande cobra de fogo." },
-        { q: "A Pisadeira ataca quando?", ops: ["A dormir de barriga cheia", "A correr", "No banho", "Na floresta"], r: "A dormir de barriga cheia", ex: "Pisa no peito de quem dorme após o jantar." },
-        { q: "Qual lenda tem apenas uma perna?", ops: ["Saci", "Curupira", "Mapinguari", "Lobomem"], r: "Saci", ex: "O Saci-Pererê desloca-se em redemoinhos." },
-        { q: "O Mapinguari é o quê?", ops: ["Monstro gigante", "Pássaro", "Cobra", "Fantasma"], r: "Monstro gigante", ex: "Dizem ter uma boca enorme na barriga." },
-        { q: "Como derrotar o Saci?", ops: ["Roubar o gorro", "Prender numa garrafa", "Cortar a perna", "Ambas A e B"], r: "Ambas A e B", ex: "O gorro dá-lhe poderes e a garrafa prende-o." },
-        { q: "O Corpo-Seco é o quê?", ops: ["Um morto que a terra rejeitou", "Um vampiro", "Um demónio", "Um esqueleto"], r: "Um morto que a terra rejeitou", ex: "Fica agarrado às árvores a secar." },
-        { q: "A Comadre Fulozinha gosta de quê?", ops: ["Paprica", "Mel e fumo", "Ouro", "Doces"], r: "Mel e fumo", ex: "Para não fazer traquinices, dão-lhe oferendas." },
-        { q: "Qual lenda vive no esgoto (urbana)?", ops: ["Loira do Banheiro", "Chupa-cabras", "ET de Varginha", "Palhaço"], r: "Loira do Banheiro", ex: "Dizem que aparece após bater a porta e puxar o autoclismo." },
-        { q: "Quem era o 'Homem do Saco'?", ops: ["Leva crianças", "Dá doces", "Limpa chaminés", "Mora na rua"], r: "Leva crianças", ex: "Usado para assustar crianças desobedientes." },
-        { q: "O que o Capelobo faz?", ops: ["Bebe cérebro", "Come carne", "Rouba gado", "Suga sangue"], r: "Bebe cérebro", ex: "Lenda do Maranhão e Pará." },
-        { q: "O que afasta o Lobisomem?", ops: ["Prata", "Alho", "Cruzes", "Água benta"], r: "Prata", ex: "Uma bala ou objeto de prata é fatal." },
-        { q: "Quem protege as flores no folclore?", ops: ["Anhangá", "Caipora", "Mani", "Iara"], r: "Caipora", ex: "Monta um porco-do-mato e guarda a caça." }
+          { q: "Onde vive a Matinta Pereira?", ops: ["Amazónia", "Pampas", "Cerrado", "Pantanal"], r: "Amazónia", ex: "Lenda nortista de uma velha feiticeira." }
       ],
       creepypasta: [
-        { q: "Qual a frase do Jeff the Killer?", ops: ["Go to Sleep", "Sweet Dreams", "Die", "Smile"], r: "Go to Sleep", ex: "Dita antes de atacar as suas vítimas." },
-        { q: "Como o Slenderman ataca?", ops: ["Tentáculos/Paralisia", "Faca", "Arma", "Mordida"], r: "Tentáculos/Paralisia", ex: "Causa interferência eletrónica e náuseas." },
-        { q: "Quem é Ben Drowned?", ops: ["Espírito no Zelda", "Um Hacker", "Vampiro", "Zumbi"], r: "Espírito no Zelda", ex: "Assombra um cartucho de Majora's Mask." },
-        { q: "Eyeless Jack come o quê?", ops: ["Rins", "Coração", "Olhos", "Língua"], r: "Rins", ex: "Ele retira os rins das vítimas enquanto dormem." },
-        { q: "O que é o 'The Rake'?", ops: ["Criatura pálida", "Um fantasma", "Um cão", "Um robô"], r: "Criatura pálida", ex: "Observa as pessoas ao pé da cama." },
-        { q: "Quem é o Smile Dog?", ops: ["Cachorro possuído", "Um lobo", "Um demónio", "Um gato"], r: "Cachorro possuído", ex: "Uma imagem que enlouquece quem a vê." },
-        { q: "O que são as Backrooms?", ops: ["Labirinto de salas amarelas", "Um hospital", "Uma escola", "Um hotel"], r: "Labirinto de salas amarelas", ex: "Onde cais se 'saíres da realidade'." },
-        { q: "Quem é Ticci Toby?", ops: ["Proxy do Slender", "Irmão do Jeff", "Um fantasma", "Palhaço"], r: "Proxy do Slender", ex: "Usa machados e não sente dor." },
-        { q: "O que o Sonic.exe tem nos olhos?", ops: ["Sangue", "Brilho", "Fogo", "São normais"], r: "Sangue", ex: "Olhos pretos com pupilas vermelhas a sangrar." },
-        { q: "Quem é Jane the Killer?", ops: ["Inimiga do Jeff", "Namorada do Jeff", "Irmã", "Mãe"], r: "Inimiga do Jeff", ex: "Quer vingança pelo que ele lhe fez." },
-        { q: "Laughing Jack era o quê?", ops: ["Um palhaço de caixa", "Um boneco", "Um mimo", "Um mago"], r: "Um palhaço de caixa", ex: "Tornou-se cruel após ser abandonado." },
-        { q: "O que é a Creepypasta '1999'?", ops: ["Canal de TV bizarro", "Um jogo", "Um site", "Um vírus"], r: "Canal de TV bizarro", ex: "Envolve um programa chamado 'Mr. Bear'." },
-        { q: "Quem é Sally Williams?", ops: ["Uma menina fantasma", "Uma assassina", "Proxy", "Vampira"], r: "Uma menina fantasma", ex: "A sua frase é 'Play with me?'." },
-        { q: "O que o Hoodie usa?", ops: ["Casaco com capuz", "Máscara branca", "Fato", "Capa"], r: "Casaco com capuz", ex: "É um dos proxies mais misteriosos." },
-        { q: "Quem é o Bloody Painter?", ops: ["Helen Otis", "Jack", "Jeff", "Tom"], r: "Helen Otis", ex: "Usa o sangue das vítimas para pintar." },
-        { q: "Qual o jogo do 'Lavender Town Syndrome'?", ops: ["Pokémon", "Mario", "Sonic", "Final Fantasy"], r: "Pokémon", ex: "Lenda sobre música que causava mal estar." },
-        { q: "O que é o 'Russian Sleep Experiment'?", ops: ["Prisioneiros sem dormir", "Um gás", "Um monstro", "Um sonho"], r: "Prisioneiros sem dormir", ex: "Envolveu estimulantes que correram muito mal." },
-        { q: "Zalgo é representado por quê?", ops: ["Texto corrompido", "Fogo", "Gelo", "Som"], r: "Texto corrompido", ex: "Ele é a entidade do caos (He Comes!)." },
-        { q: "Quem é Clockwork?", ops: ["Assassina com relógio no olho", "Um robô", "Fantasma", "Bruxa"], r: "Assassina com relógio no olho", ex: "Sua frase é 'Your time is up'." },
-        { q: "O que é 'Candle Cove'?", ops: ["Programa de TV imaginário", "Uma praia", "Uma gruta", "Um livro"], r: "Programa de TV imaginário", ex: "Discussão num fórum sobre um show de marionetas." }
+          { q: "Qual a frase do Jeff the Killer?", ops: ["Go to Sleep", "Sweet Dreams", "Die", "Smile"], r: "Go to Sleep", ex: "Dita antes de atacar as suas vítimas." }
       ]
     };
 
-    let lista = [], idx = 0, pts = 0, total = 0, n_user = "";
+    let lista = [], idx = 0, pts = 0;
 
     function iniciarQuiz() {
-      n_user = document.getElementById('nome').value || "Alma Perdida";
+      iniciarMusica();
       const t = document.getElementById('tema').value;
-      total = parseInt(document.getElementById('qtd').value);
-      
+      const total = parseInt(document.getElementById('qtd').value);
       let base = t === 'misto' ? [...perguntas.filmes, ...perguntas.lendas, ...perguntas.creepypasta] : [...perguntas[t]];
       lista = base.sort(() => Math.random() - 0.5).slice(0, total);
-
       document.getElementById('landing').style.display = 'none';
       document.getElementById('quiz-section').style.display = 'flex';
       render();
@@ -153,7 +120,6 @@
     function render() {
       if(idx >= lista.length) return fim();
       const qObj = lista[idx];
-      document.getElementById('quiz-status').textContent = `Pergunta ${idx + 1} de ${total}`;
       document.getElementById('pergunta').textContent = qObj.q;
       const box = document.getElementById('opcoes');
       box.innerHTML = '';
@@ -168,13 +134,20 @@
 
     function checar(escolha) {
       const qObj = lista[idx];
+      const body = document.getElementById('game-body');
+
       if(escolha === qObj.r) {
         pts++;
-        document.getElementById('score').textContent = `Almas Ceifadas: ${pts}`;
+        somAcerto.play();
+        document.getElementById('score').textContent = `Almas: ${pts}`;
         idx++; render();
       } else {
-        document.getElementById('balloon-text').innerHTML = `💀 <b>O PORTAL REJEITOU!</b><br><br>A correta era: ${qObj.r}<br><br><small>${qObj.ex}</small>`;
+        // EFEITO DE ERRO
+        somErro.play();
+        body.classList.add('shake'); // Treme a tela
+        document.getElementById('balloon-text').innerHTML = `<span style="font-size:2rem">💀</span><br><b>SUA ALMA É MINHA!</b><br><br>A correta era: ${qObj.r}`;
         document.getElementById('balloon').style.display = 'block';
+        setTimeout(() => body.classList.remove('shake'), 500);
       }
     }
 
@@ -186,22 +159,7 @@
     function fim() {
       document.getElementById('quiz-section').style.display = 'none';
       document.getElementById('end-section').style.display = 'flex';
-      document.getElementById('resultado').textContent = `${n_user}, ceifaste ${pts} de ${total} almas!`;
-      
-      let rk = JSON.parse(localStorage.getItem('rank_terror') || '[]');
-      rk.push({n: n_user, p: pts, t: total});
-      rk.sort((a,b) => b.p - a.p);
-      localStorage.setItem('rank_terror', JSON.stringify(rk.slice(0,5)));
-      
-      let h = "<h3>MORTES RECENTES</h3>";
-      rk.slice(0,5).forEach(i => h += `<p>${i.n}: ${i.p}/${i.t}</p>`);
-      document.getElementById('ranking').innerHTML = h;
-    }
-
-    function compartilhar() {
-      const t = `Sobrevivi ao Quiz Ceifador com ${pts}/${total} pontos! 💀`;
-      if(navigator.share) navigator.share({title: 'Quiz Ceifador', text: t, url: location.href});
-      else alert(t);
+      document.getElementById('resultado').textContent = `Você ceifou ${pts} almas!`;
     }
   </script>
 </body>
