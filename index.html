@@ -1,184 +1,359 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Quiz Fantasma 👻</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Fantasma 👻 – Dimensão do Terror</title>
+  <meta name="description" content="Quiz interativo de terror: filmes, lendas, Creepypastas. Escolha o tema e teste seu conhecimento sombrio!">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👻</text></svg>">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: #0a0015 url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80') center/cover no-repeat fixed;
+      color: #e0e0ff;
+      font-family: 'Special Elite', cursive;
+      overflow: hidden;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(10,0,21,0.6), rgba(30,0,60,0.4));
+      pointer-events: none;
+      animation: pulse 12s infinite alternate;
+    }
+    @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 0.7; } }
 
-<style>
-body{
-  margin:0;
-  background:#0a0a0a;
-  color:#e0e0e0;
-  font-family:Arial,sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
-}
-.container{
-  width:100%;
-  max-width:500px;
-  background:#111;
-  padding:20px;
-  border-radius:12px;
-  box-shadow:0 0 25px rgba(0,0,0,.8);
-}
-h1{text-align:center;}
-select,input,button{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  border-radius:6px;
-  border:none;
-  font-size:1em;
-}
-button{
-  background:#5c0f14;
-  color:#fff;
-  cursor:pointer;
-}
-button:hover{background:#7a1319;}
-.opcao{
-  background:#1b1b1b;
-  padding:12px;
-  margin:8px 0;
-  border-radius:6px;
-  cursor:pointer;
-}
-.opcao:hover{background:#2a2a2a;}
-.timer{
-  text-align:right;
-  color:#f1c40f;
-}
-.aviso{
-  color:#f1c40f;
-  font-size:.85em;
-  text-align:center;
-}
-.ranking{
-  font-size:.9em;
-  margin-top:10px;
-}
-</style>
+    .container {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Creepster', cursive;
+      font-size: clamp(3.5rem, 12vw, 8rem);
+      color: #d4d4ff;
+      text-shadow: 0 0 20px #8b00ff, 0 0 40px #4b0082;
+      margin-bottom: 1.5rem;
+      animation: glitch 4s infinite;
+      letter-spacing: 0.1em;
+    }
+    @keyframes glitch {
+      0%, 100% { transform: translate(0); }
+      20% { transform: translate(-3px, 3px); }
+      40% { transform: translate(3px, -3px); }
+      60% { transform: translate(-2px, 2px); }
+      80% { transform: translate(2px, -2px); }
+    }
+
+    .input-group, .select-group {
+      margin: 1rem 0;
+      width: 100%;
+      max-width: 400px;
+    }
+    label {
+      display: block;
+      font-size: 1.3rem;
+      margin-bottom: 0.8rem;
+      color: #c0c0ff;
+      text-shadow: 0 0 10px #6600cc;
+    }
+    input, select {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1.2rem;
+      background: rgba(20,0,40,0.6);
+      border: 2px solid #8b00ff;
+      border-radius: 8px;
+      color: white;
+      font-family: inherit;
+      transition: all 0.3s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #ff00ff;
+      box-shadow: 0 0 15px #ff00ff80;
+    }
+
+    button {
+      padding: 1.2rem 3rem;
+      font-size: 1.5rem;
+      background: linear-gradient(45deg, #4b0082, #8b00ff);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 0 30px #8b00ff60;
+      transition: all 0.4s;
+      margin-top: 1.5rem;
+    }
+    button:hover {
+      transform: scale(1.08) translateY(-5px);
+      box-shadow: 0 0 50px #ff00ff90;
+      background: linear-gradient(45deg, #8b00ff, #ff00ff);
+    }
+
+    #quiz-section {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+    }
+    .question {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .option {
+      padding: 1rem;
+      background: rgba(20,0,40,0.8);
+      border: 2px solid #8b00ff;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .option:hover {
+      border-color: #ff00ff;
+      box-shadow: 0 0 15px #ff00ff80;
+    }
+    #progress {
+      width: 100%;
+      height: 10px;
+      background: #333;
+      margin: 1rem 0;
+      border-radius: 5px;
+    }
+    #progress-bar {
+      height: 100%;
+      background: #8b00ff;
+      width: 0;
+      transition: width 0.3s;
+      border-radius: 5px;
+    }
+    #score {
+      font-size: 1.4rem;
+      margin: 1rem 0;
+    }
+
+    #balloon {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,0,255,0.9);
+      color: #000;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 0 30px #ff00ff;
+      display: none;
+      z-index: 10;
+      text-align: center;
+      animation: fadeIn 0.5s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    #end-section {
+      display: none;
+    }
+    #ranking {
+      margin-top: 2rem;
+      text-align: center;
+      width: 100%;
+      max-width: 600px;
+    }
+    #ranking h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    #ranking ol {
+      list-style-type: none;
+      counter-reset: ranking-counter;
+    }
+    #ranking li {
+      counter-increment: ranking-counter;
+      position: relative;
+      padding-left: 2rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+    }
+    #ranking li::before {
+      content: counter(ranking-counter) "º";
+      position: absolute;
+      left: 0;
+      color: #ff00ff;
+      font-weight: bold;
+    }
+    #share-btn {
+      background: linear-gradient(45deg, #ff00ff, #8b00ff);
+      margin-top: 2rem;
+    }
+
+    #mute-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .ghost {
+      position: absolute;
+      font-size: 8rem;
+      opacity: 0.15;
+      pointer-events: none;
+      animation: float 20s infinite linear;
+    }
+    .ghost:nth-child(1) { top: 10%; left: 10%; animation-duration: 35s; }
+    .ghost:nth-child(2) { bottom: 15%; right: 8%; animation-duration: 28s; animation-direction: reverse; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(80px, -60px); }
+      50% { transform: translate(-40px, 100px); }
+      75% { transform: translate(60px, -80px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: clamp(3rem, 15vw, 6rem); }
+      button { padding: 1rem 2.5rem; font-size: 1.3rem; }
+    }
+  </style>
 </head>
-
 <body>
-<div class="container" id="app">
 
-<h1>Quiz Fantasma 👻</h1>
+  <div class="container" id="landing">
+    <h1>Quiz Fantasma 👻</h1>
 
-<div class="aviso">
-Nome opcional — apenas para o Ranking Fantasma
-</div>
+    <div class="input-group">
+      <label for="nome">Nome opcional – para o Ranking Fantasma</label>
+      <input type="text" id="nome" placeholder="Seu nome sombrio..." maxlength="30">
+    </div>
 
-<input id="nome" placeholder="Seu nome (opcional)">
+    <div class="select-group">
+      <label for="tema">Escolha o tema do terror:</label>
+      <select id="tema">
+        <option value="filmes">Filmes de Terror</option>
+        <option value="lendas">Lendas Urbanas</option>
+        <option value="creepypasta">Creepypastas</option>
+        <option value="misto">Misto (Tudo!)</option>
+      </select>
+    </div>
 
-<select id="tema">
-<option value="espiritos">Espíritos</option>
-<option value="demonios">Demônios</option>
-<option value="misterios">Mistérios</option>
-</select>
+    <button onclick="iniciarQuiz()">Entrar na Dimensão</button>
+  </div>
 
-<select id="quantidade">
-<option value="10">10 Perguntas</option>
-<option value="15">15 Perguntas</option>
-<option value="20">20 Perguntas</option>
-</select>
+  <div class="container" id="quiz-section">
+    <h1 id="quiz-title">Quiz em Andamento...</h1>
+    <div id="progress"><div id="progress-bar"></div></div>
+    <div class="question" id="pergunta"></div>
+    <div class="options" id="opcoes"></div>
+    <div id="score">Pontos: 0</div>
+    <div id="error-msg" style="color: red; display: none; margin: 1rem 0;">Errado! Tente novamente...</div>
+  </div>
 
-<button onclick="iniciar()">Iniciar Quiz</button>
+  <div class="container" id="end-section">
+    <h1>Fim do Quiz 👻</h1>
+    <div id="resultado"></div>
+    <div id="ranking"></div>
+    <button id="share-btn" onclick="compartilharResultado()">Compartilhar Meu Resultado</button>
+    <button onclick="reiniciar()">Jogar Novamente</button>
+  </div>
 
-</div>
+  <div id="balloon">
+    <p id="balloon-text"></p>
+    <button onclick="fecharBalloon()">Fechar</button>
+  </div>
 
-<script>
-const TEMPO_PADRAO = 15;
-let tempo, timer;
-let atual=0,pontos=0,quiz=[];
-let nomeJogador="";
+  <button id="mute-btn" onclick="toggleMute()">🔊</button>
 
-const banco = {
- espiritos:[
-  {q:"Espíritos aparecem mais em qual horário?",o:["Manhã","Meia-noite","Tarde"],c:1},
-  {q:"Um espírito preso é chamado de?",o:["Obsessor","Alma","Anjo"],c:0}
- ],
- demonios:[
-  {q:"Qual símbolo é usado para invocação?",o:["Cruz","Pentagrama","Lua"],c:1},
-  {q:"Demônios são associados a?",o:["Luz","Sombras","Água"],c:1}
- ],
- misterios:[
-  {q:"Triângulo das Bermudas é conhecido por?",o:["Naufrágios","Vulcões","Neve"],c:0},
-  {q:"Objetos que se movem sozinhos?",o:["Ilusão","Poltergeist","Sonho"],c:1}
- ]
-};
+  <!-- Fantasmas flutuantes -->
+  <div class="ghost">👻</div>
+  <div class="ghost">👻</div>
 
-function iniciar(){
- nomeJogador=document.getElementById("nome").value || "Anônimo";
- const tema=document.getElementById("tema").value;
- const qtd=parseInt(document.getElementById("quantidade").value);
+  <script>
+    // Áudios (URLs livres de freesound.org - substitua se quiser)
+    const bgSound = new Audio('https://freesound.org/data/previews/243/243020_1774763-lq.mp3'); // Vento sinistro
+    bgSound.loop = true;
+    bgSound.volume = 0.2;
 
- quiz=[...banco[tema]];
- while(quiz.length<qtd) quiz=quiz.concat(banco[tema]);
- quiz=quiz.slice(0,qtd);
+    const correctSound = new Audio('https://freesound.org/data/previews/397/397355_7033107-lq.mp3'); // Risada maligna
+    correctSound.volume = 0.3;
 
- atual=0; pontos=0;
- mostrar();
-}
+    const errorSound = new Audio('https://freesound.org/data/previews/571/571501_1172916-lq.mp3'); // Grito
+    errorSound.volume = 0.3;
 
-function mostrar(){
- tempo=TEMPO_PADRAO;
- const p=quiz[atual];
- document.getElementById("app").innerHTML=`
- <div class="timer">⏱️ ${tempo}s</div>
- <h3>${p.q}</h3>
- ${p.o.map((op,i)=>`<div class="opcao" onclick="responder(${i})">${op}</div>`).join("")}
- `;
- timer=setInterval(()=>{
-  tempo--;
-  document.querySelector(".timer").innerText=`⏱️ ${tempo}s`;
-  if(tempo<=0){clearInterval(timer); responder(-1);}
- },1000);
-}
+    let muted = false;
+    function toggleMute() {
+      muted = !muted;
+      document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+      if (muted) bgSound.pause(); else bgSound.play();
+    }
 
-function responder(i){
- clearInterval(timer);
- if(i===quiz[atual].c) pontos++;
- atual++;
- atual<quiz.length?mostrar():finalizar();
-}
-
-function finalizar(){
- salvarRanking();
- document.getElementById("app").innerHTML=`
- <h2>Resultado Final</h2>
- <p>${nomeJogador}, você acertou ${pontos} de ${quiz.length}</p>
- <button onclick="compartilhar()">Compartilhar</button>
- <div class="ranking">${mostrarRanking()}</div>
- <button onclick="location.reload()">Jogar novamente</button>
- `;
-}
-
-function salvarRanking(){
- let r=JSON.parse(localStorage.getItem("rankingFantasma")||"[]");
- r.push({nome:nomeJogador,pontos});
- r.sort((a,b)=>b.pontos-a.pontos);
- r=r.slice(0,10);
- localStorage.setItem("rankingFantasma",JSON.stringify(r));
-}
-
-function mostrarRanking(){
- const r=JSON.parse(localStorage.getItem("rankingFantasma")||"[]");
- return "<h3>🏆 Ranking Fantasma</h3>"+r.map((e,i)=>`${i+1}. ${e.nome} - ${e.pontos}`).join("<br>");
-}
-
-function compartilhar(){
- const texto=`Eu enfrentei o Quiz Fantasma 👻 e fiz ${pontos} pontos!`;
- if(navigator.share){
-  navigator.share({text:texto});
- }else{
-  alert("Compartilhamento não suportado neste navegador");
- }
-}
-</script>
-
-</body>
-</html>
+    // Perguntas por tema (15 cada, aleatórias no quiz)
+    const perguntas = {
+      filmes: [
+        { pergunta: "Quem possui a garota do exorcista?", opcoes: ["A) Pazuzu", "B) Embora", "C) Cairne", "D) Belzebu"], resposta: "A) Pazuzu", explicacao: "Pazuzu é o demônio antigo que possui Regan em O Exorcista." },
+        { pergunta: "Qual filme de 1976 é considerado um dos primeiros filmes importantes do subgênero?", opcoes: ["A) O pressagio", "B) Bebê de Rosemary", "C) O Exorcista", "D) Amityville II: a possessão"], resposta: "C) O Exorcista", explicacao: "O Exorcista de 1973 (não 1976, mas clássico) marcou o subgênero de possessão." },
+        { pergunta: "Qual filme abaixo apresentava uma mulher possuída coberta de misteriosos cortes e símbolos autoinfligidos?", opcoes: ["A) A Conjuração", "B) Insidioso", "C) O demônio dentro", "D) Carrie"], resposta: "C) O demônio dentro", explicacao: "Em O Demônio Dentro, a possessão causa cortes simbólicos." },
+        { pergunta: "No filme The Evil Dead de 1981, o que é usado para invocar demônios na floresta?", opcoes: ["A) Um livro oculto", "B) Boneca vodu", "C) Tabuleiro Ouija", "D) Uma estátua amaldiçoada"], resposta: "A) Um livro oculto", explicacao: "O Necronomicon invoca os deadites." },
+        { pergunta: "Qual desses filmes apresentou, sem dúvida, uma das cenas de possessão mais assustadoras e mais longas?", opcoes: ["A) Atividade Paranormal", "B) O último Exorcismo", "C) Insidioso", "D) O ritual"], resposta: "B) O último Exorcismo", explicacao: "A cena final é intensa e prolongada." },
+        { pergunta: "Qual filme apresenta uma criança demônio?", opcoes: ["A) O pressagio", "B) O Exorcista", "C) The Sentinel", "D) M3GAN"], resposta: "B) O Exorcista", explicacao: "Regan é possuída por um demônio." },
+        { pergunta: "Qual é o nome da boneca possuída por um demônio da franquia Conjuring?", opcoes: ["A) Bella", "B) Annabelle", "C) Anne", "D) Anna"], resposta: "B) Annabelle", explicacao: "Annabelle é a boneca icônica." },
+        { pergunta: "Qual filme apresenta Russel Crowe como pai e exorcista-chefe?", opcoes: ["A) O Exorcista do Papa", "B) O Exorcismo de Emily Rose", "C) Ore pelo diabo", "D) A fita do Vaticano"], resposta: "A) O Exorcista do Papa", explicacao: "Crowe interpreta o Padre Amorth." },
+        { pergunta: "De todos esses filmes, qual filme não está relacionado à possessão demoníaca?", opcoes: ["A) Atividade Paranormal", "B) Cloverfield", "C) Insidioso", "D) A freira"], resposta: "B) Cloverfield", explicacao: "Cloverfield é sobre um monstro gigante, não possessão." },
+        { pergunta: "No filme Insidioso, qual é o nome do demônio que possui Dalton Lambert?", opcoes: ["A) Panzuzu", "B) Kandariano", "C) Molde de dardo", "D) O Demônio com Cara de Batom"], resposta: "D) O Demônio com Cara de Batom", explicacao: "O Lipstick-Face Demon." },
+        { pergunta: "Qual é o nome do filme de 1968 considerado o primeiro filme moderno de zumbis?", opcoes: ["A) Noite dos Mortos-Vivos", "B) White Zombie", "C) A praga dos zumbis", "D) Comedores de carne zumbi"], resposta: "A) Noite dos Mortos-Vivos", explicacao: "De George Romero, revolucionou o gênero." },
+        { pergunta: "Qual filme popularizou o conceito de zumbis rápidos em vez de zumbis lentos e embaralhados?", opcoes: ["A) World War Z", "B) Comboio para Busan", "C) Dias mais tarde 28", "D) Shaun of the Dead"], resposta: "C) Dias mais tarde 28", explicacao: "28 Days Later introduziu zumbis ágeis." },
+        { pergunta: "Qual é o nome do vírus que transforma pessoas em zumbis no filme Guerra Mundial Z?", opcoes: ["A) Vírus Solanum", "B) Covid-19", "C) Coronavírus", "D) Vírus da raiva"], resposta: "A) Vírus Solanum", explicacao: "Do livro original." },
+        { pergunta: "No filme Zombieland, qual é a regra número um para sobreviver a um apocalipse zumbi?", opcoes: ["A) Double Tap", "B) Cuidado com os banheiros", "C) Não seja um herói", "D) Cardio"], resposta: "D) Cardio", explicacao: "Ficar em forma para correr." },
+        { pergunta: "Qual empresa é responsável pelo surto de zumbis em Resident Evil?", opcoes: ["A) LexCorp", "B) Corpo de guarda-chuva", "C) Virtucon", "D) Sistemas Cyberdyne"], resposta: "B) Corpo de guarda-chuva", explicacao: "Umbrella Corporation." }
+      ],
+      lendas: [
+        { pergunta: "Em qual região do Brasil a lenda da Matinta Pereira é mais popular?", opcoes: ["A) Norte e Nordeste", "B) Sul e Sudeste", "C) Centro-Oeste", "D) Todo o Brasil"], resposta: "A) Norte e Nordeste", explicacao: "É uma lenda amazônica comum no Norte." },
+        { pergunta: "O que acontece, segundo a lenda, quando alguém se recusa a dar o que a Matinta pede?", opcoes: ["A) Ela deixa um presente misterioso", "B) Ela joga uma praga na pessoa", "C) Ela desaparece para sempre", "D) Ela volta no dia seguinte"], resposta: "B) Ela joga uma praga na pessoa", explicacao: "A praga causa infortúnios." },
+        { pergunta: "De acordo com algumas versões da lenda, em que animal a Matinta pode se transformar?", opcoes: ["A) Gato", "B) Coruja", "C) Pássaro", "D) Cachorro"], resposta: "C) Pássaro", explicacao: "Geralmente um pássaro noturno." },
+        { pergunta: "O que era, segundo a lenda, o ser conhecido como Minhocão?", opcoes: ["A) Uma cobra ou minhoca gigante", "B) Um peixe gigante", "C) Um espírito da floresta", "D) Um dragão voador"], resposta: "A) Uma cobra ou minhoca gigante", explicacao: "Uma criatura subterrânea enorme." },
+        { pergunta: "Em qual estado brasileiro a lenda do Minhocão é mais conhecida?", opcoes: ["A) Pará", "B) Bahia", "C) Amazonas", "D) Mato Grosso"], resposta: "D) Mato Grosso", explicacao: "Relatos vêm do interior." },
+        { pergunta: "Por que o Minhocão era temido pelos moradores da região?", opcoes: ["A) Porque sequestrava crianças", "B) Porque destruía plantações", "C) Porque envenenava os rios", "D) Porque causava deslizamentos e tremores de terra"], resposta: "D) Porque causava deslizamentos e tremores de terra", explicacao: "Seu movimento subterrâneo causa destruição." },
+        { pergunta: "Como a Mãe do Ouro costuma aparecer, segundo a lenda?", opcoes: ["A) Como uma cobra dourada", "B) Como uma mulher vestida de branco", "C) Como uma bola de fogo ou mulher com vestido brilhante", "D) Como uma nuvem escura"], resposta: "C) Como uma bola de fogo ou mulher com vestido brilhante", explicacao: "Atrai e assusta garimpeiros." },
+        { pergunta: "Qual é o principal objetivo da Mãe do Ouro na lenda?", opcoes: ["A) Proteger riquezas naturais e afastar os ambiciosos", "B) Proteger os animais da floresta", "C) Guiar garimpeiros até minas de ouro", "D) Ajudar os viajantes perdidos"], resposta: "A) Proteger riquezas naturais e afastar os ambiciosos", explicacao: "Guarda o ouro da ganância." },
+        { pergunta: "O que acontece com quem tenta explorar onde a Mãe do Ouro aparece?", opcoes: ["A) Fica cego com o brilho dela", "B) Encontra muito ouro e fica rico", "C) Recebe uma bênção", "D) Desaparece misteriosamente ou é castigado"], resposta: "D) Desaparece misteriosamente ou é castigado", explicacao: "Punição pela cobiça." },
+        { pergunta: "Como a Iara costuma ser descrita nas lendas do folclore brasileiro?", opcoes: ["A) Como uma mulher com asas douradas", "B) Como uma sereia, metade mulher e metade peixe", "C) Como um espírito invisível da floresta", "D) Como uma velha que vive em cavernas"], resposta: "B) Como uma sereia, metade mulher e metade peixe", explicacao: "Sereia amazônica." },
+        { pergunta: "O que a Iara costuma fazer com os homens que se aproximam dela?", opcoes: ["A) Encanta com seu canto e os leva para o fundo das águas", "B) Dá conselhos sobre o rio", "C) Entrega um tesouro escondido", "D) Transforma-os em peixes"], resposta: "A) Encanta com seu canto e os leva para o fundo das águas", explicacao: "Seduz e afoga." },
+        { pergunta: "Onde a Iara costuma viver, segundo a lenda?", opcoes: ["A) Em árvores sagradas", "B) Em cavernas escondidas", "C) No topo das montanhas", "D) Nas profundezas dos rios e igarapés"], resposta: "D) Nas profundezas dos rios e igarapés", explicacao: "Habita águas doces." },
+        { pergunta: "Qual é a aparência do Saci-Pererê?", opcoes: ["A) Menino negro de uma perna só com gorro vermelho", "B) Velho barbudo com cajado", "C) Mulher com cabelos longos", "D) Animal com olhos de fogo"], resposta: "A) Menino negro de uma perna só com gorro vermelho", explicacao: "Clássico folclore brasileiro." },
+        { pergunta: "O que o Curupira protege na floresta?", opcoes: ["A) Os rios", "B) Os animais e as árvores", "C) Os tesouros escondidos", "D) As crianças perdidas"], resposta: "B) Os animais e as árvores", explicacao: "Guardião da natureza." },
+        { pergunta: "Como o Boitatá se manifesta?", opcoes: ["A) Como uma cobra de fogo", "B) Como um vento forte", "C) Como um som de risadas", "D) Como uma sombra escura"], resposta: "A) Como uma cobra de fogo", explicacao: "Protetor contra incêndios." }
+      ],
+      creepypasta: [
+        { pergunta: "Jeff The Killer e Liu Homicidal, são o que um do outro?", opcoes: ["A) Não sei.", "B) Os dois são um casal.", "C) Os dois são irmãos."], resposta: "C) Os dois são irmãos.", explicacao: "Jeff e Liu são irmãos na história original." },
+        { pergunta: "Jane The Killer, e Jeff The killer tem relação de:", opcoes: ["A) Paixão, são completamente apaixonados um pelo outro.", "B) Amor, os dois estão namorando.", "C) Ódio, os dois se odeiam e querem se matar."], resposta: "C) Ódio, os dois se odeiam e querem se matar.", explicacao: "Jane busca vingança contra Jeff." },
+        { pergunta: "Quais são os principais proxys do Slenderman?", opcoes: ["A) Jeff, Ben, Nina, Bloody Painter.", "B) Slenderman não tem proxys.", "C) Masky, Ticci Toby, Hoodie."], resposta: "C) Masky, Ticci Toby, Hoodie.", explicacao: "Eles são os proxies canônicos." },
+        { pergunta: "Quais são os verdadeiros nomes dos proxys?", opcoes: ["A) Mike Hill, George Jones Brown, Harry Miller.", "B) Timothy Wright, Tobias Erin Rogers, Brian Thomas.", "C) Masky, Ticci Toby, Hoodie."], resposta: "B) Timothy Wright, Tobias Erin Rogers, Brian Thomas.", explicacao: "Nomes reais dos personagens." },
+        { pergunta: "Sally a suja, foi morta pelo(a) seu(a)?", opcoes: ["A) Tio", "B) Prima", "C) Pai", "D) Irmã", "E) Mãe"], resposta: "A) Tio", explicacao: "Abusada e morta pelo tio." },
+        { pergunta: "Qual é o nome verdadeiro do Bloody Painter?(Pintor sangrento)", opcoes: ["A) Helen Otis.", "B) Jack Dahnmer."], resposta: "A) Helen Otis.", explicacao: "Helen é o nome real." },
+        { pergunta: "Qual foi o primeiro ser vivo a Jack Risonho matar?", opcoes: ["A) Gato.", "B) Isaac.", "C) Um homem.", "D) Cavalo."], resposta: "A) Gato.", explicacao: "Começou com um animal." },
+        { pergunta: "Sam e Sally são o que?", opcoes: ["A) Rivais.", "B) Irmãos", "C) Amigos.", "D) Primos."], resposta: "B) Irmãos", explicacao: "Irmãos na lore." },
+        { pergunta: "Lily Kennett tem medo de?", opcoes: ["A) Água.", "B) Adultos.", "C) Dentistas.", "D) Médicos."], resposta: "B) Adultos.", explicacao: "Trauma de infância." },
+        { pergunta: "Qual arma Zer
