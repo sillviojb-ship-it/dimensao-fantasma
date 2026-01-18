@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quiz Ceifador 💀 – Dimensão do Terror</title>
+  <meta name="description" content="Quiz de terror: escolha tema e número de perguntas (10-20). Teste se sua alma sobrevive!">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💀</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&display=swap" rel="stylesheet">
   
@@ -196,7 +197,7 @@
   <div class="ceifador">🪦</div>
 
   <script>
-    // Sons (funcionam após interação)
+    // Sons
     const bgSound = new Audio('https://freesound.org/data/previews/243/243020_1774763-lq.mp3');
     bgSound.loop = true; bgSound.volume = 0.25;
     
@@ -213,14 +214,58 @@
       if (muted) bgSound.pause(); else bgSound.play().catch(e=>console.log("Som bloqueado:",e));
     }
 
-    // Perguntas (copie as completas da versão que funcionou antes)
     const perguntas = {
       filmes: [
-        {pergunta: "Quem possui a garota em O Exorcista?", opcoes: ["A) Pazuzu","B) Belzebu","C) Legion","D) Asmodeus"], resposta: "A) Pazuzu", explicacao: "Pazuzu é o demônio principal."},
-        // ... adicione as outras aqui (copie da versão anterior)
+        { pergunta: "Quem possui a garota do exorcista?", opcoes: ["A) Pazuzu", "B) Embora", "C) Cairne", "D) Belzebu"], resposta: "A) Pazuzu", explicacao: "Pazuzu é o demônio antigo que possui Regan em O Exorcista." },
+        { pergunta: "Qual filme de 1973 marcou o subgênero de possessão?", opcoes: ["A) O pressagio", "B) Bebê de Rosemary", "C) O Exorcista", "D) Amityville"], resposta: "C) O Exorcista", explicacao: "O Exorcista é o clássico que definiu possessão demoníaca no cinema." },
+        { pergunta: "Qual filme apresenta a boneca Annabelle?", opcoes: ["A) A Conjuração", "B) Annabelle", "C) Insidioso", "D) A Freira"], resposta: "B) Annabelle", explicacao: "Annabelle é a boneca possuída da franquia Conjuring." },
+        { pergunta: "No filme Insidioso, qual é o demônio com cara de batom?", opcoes: ["A) Pazuzu", "B) O Demônio com Cara de Batom", "C) Kandariano", "D) Belzebu"], resposta: "B) O Demônio com Cara de Batom", explicacao: "Conhecido como Lipstick-Face Demon." },
+        { pergunta: "Qual filme introduziu zumbis rápidos?", opcoes: ["A) World War Z", "B) 28 Days Later", "C) Zombieland", "D) Train to Busan"], resposta: "B) 28 Days Later", explicacao: "28 Days Later popularizou zumbis ágeis e infectados." },
+        { pergunta: "Qual é a regra número um em Zombieland?", opcoes: ["A) Double Tap", "B) Cardio", "C) Cuidado com banheiros", "D) Não seja herói"], resposta: "B) Cardio", explicacao: "Manter-se em forma para correr dos zumbis." },
+        { pergunta: "Qual empresa causa o apocalipse zumbi em Resident Evil?", opcoes: ["A) Umbrella Corporation", "B) LexCorp", "C) Cyberdyne", "D) Virtucon"], resposta: "A) Umbrella Corporation", explicacao: "A Umbrella liberou o vírus T." },
+        { pergunta: "Qual vírus transforma pessoas em zumbis em World War Z?", opcoes: ["A) Solanum", "B) T-Virus", "C) Rage Virus", "D) Rabies"], resposta: "A) Solanum", explicacao: "Nome do vírus no livro e filme." },
+        { pergunta: "Qual filme de 1968 é considerado o marco dos zumbis modernos?", opcoes: ["A) Noite dos Mortos-Vivos", "B) White Zombie", "C) Dawn of the Dead", "D) Re-Animator"], resposta: "A) Noite dos Mortos-Vivos", explicacao: "Obra de George Romero." },
+        { pergunta: "Em qual filme Russel Crowe interpreta um exorcista?", opcoes: ["A) O Exorcista do Papa", "B) Constantine", "C) O Exorcismo de Emily Rose", "D) A Freira"], resposta: "A) O Exorcista do Papa", explicacao: "Baseado nas histórias reais do Padre Amorth." },
+        { pergunta: "Qual filme NÃO envolve possessão demoníaca?", opcoes: ["A) Cloverfield", "B) O Exorcista", "C) Insidioso", "D) A Conjuração"], resposta: "A) Cloverfield", explicacao: "Cloverfield é sobre um monstro gigante." },
+        { pergunta: "Qual é o nome do demônio em O Exorcista?", opcoes: ["A) Pazuzu", "B) Lúcifer", "C) Asmodeus", "D) Belial"], resposta: "A) Pazuzu", explicacao: "Demônio mesopotâmico." },
+        { pergunta: "Qual filme tem a cena de possessão mais longa?", opcoes: ["A) O Último Exorcismo", "B) O Exorcista", "C) Requiem", "D) O Ritual"], resposta: "A) O Último Exorcismo", explicacao: "Cena final prolongada e intensa." },
+        { pergunta: "Em qual filme há uma criança possuída?", opcoes: ["A) O Presságio", "B) O Exorcista", "C) A Órfã", "D) Hereditário"], resposta: "B) O Exorcista", explicacao: "Regan MacNeil." },
+        { pergunta: "Qual filme tem Annabelle como personagem central?", opcoes: ["A) Annabelle Creation", "B) A Conjuração", "C) Annabelle Comes Home", "D) Todas as anteriores"], resposta: "D) Todas as anteriores", explicacao: "Franquia Annabelle." }
       ],
-      lendas: [ /* copie as de lendas */ ],
-      creepypasta: [ /* copie as de creepypasta */ ]
+      lendas: [
+        { pergunta: "Em qual região a Matinta Pereira é mais conhecida?", opcoes: ["A) Norte e Nordeste", "B) Sul", "C) Sudeste", "D) Centro-Oeste"], resposta: "A) Norte e Nordeste", explicacao: "Lenda amazônica." },
+        { pergunta: "O que acontece se recusar dar algo à Matinta?", opcoes: ["A) Ela deixa presente", "B) Joga praga", "C) Desaparece", "D) Volta amanhã"], resposta: "B) Joga praga", explicacao: "Causa infortúnios." },
+        { pergunta: "Em que animal a Matinta se transforma?", opcoes: ["A) Gato", "B) Coruja", "C) Pássaro", "D) Cachorro"], resposta: "C) Pássaro", explicacao: "Pássaro noturno." },
+        { pergunta: "O que era o Minhocão?", opcoes: ["A) Minhoca gigante", "B) Peixe", "C) Espírito", "D) Dragão"], resposta: "A) Minhoca gigante", explicacao: "Criatura subterrânea." },
+        { pergunta: "Onde o Minhocão é mais relatado?", opcoes: ["A) Pará", "B) Bahia", "C) Amazonas", "D) Mato Grosso"], resposta: "D) Mato Grosso", explicacao: "Interior do estado." },
+        { pergunta: "Por que o Minhocão era temido?", opcoes: ["A) Sequestrava crianças", "B) Causava tremores", "C) Envenenava rios", "D) Destruía plantações"], resposta: "B) Causava tremores", explicacao: "Movimento causa deslizamentos." },
+        { pergunta: "Como a Mãe do Ouro aparece?", opcoes: ["A) Cobra dourada", "B) Mulher brilhante", "C) Bola de fogo", "D) Ambas B e C"], resposta: "D) Ambas B e C", explicacao: "Atrai e assusta garimpeiros." },
+        { pergunta: "Qual o objetivo da Mãe do Ouro?", opcoes: ["A) Proteger ouro da ganância", "B) Guiar garimpeiros", "C) Ajudar perdidos", "D) Proteger animais"], resposta: "A) Proteger ouro da ganância", explicacao: "Guarda riquezas naturais." },
+        { pergunta: "O que acontece com quem explora sua área?", opcoes: ["A) Fica rico", "B) Desaparece ou é punido", "C) Recebe bênção", "D) Fica cego"], resposta: "B) Desaparece ou é punido", explicacao: "Castigo pela cobiça." },
+        { pergunta: "Como a Iara é descrita?", opcoes: ["A) Sereia amazônica", "B) Mulher com asas", "C) Velha em cavernas", "D) Espírito invisível"], resposta: "A) Sereia amazônica", explicacao: "Metade mulher, metade peixe." },
+        { pergunta: "O que a Iara faz com homens?", opcoes: ["A) Encanta e afoga", "B) Dá tesouro", "C) Transforma em peixe", "D) Dá conselhos"], resposta: "A) Encanta e afoga", explicacao: "Seduz com canto." },
+        { pergunta: "Onde a Iara vive?", opcoes: ["A) Rios e igarapés", "B) Árvores", "C) Montanhas", "D) Cavernas"], resposta: "A) Rios e igarapés", explicacao: "Águas doces." },
+        { pergunta: "Aparência do Saci-Pererê?", opcoes: ["A) Menino de uma perna só", "B) Velho barbudo", "C) Mulher cabelos longos", "D) Animal"], resposta: "A) Menino de uma perna só", explicacao: "Com gorro vermelho." },
+        { pergunta: "O que o Curupira protege?", opcoes: ["A) Animais e árvores", "B) Rios", "C) Tesouros", "D) Crianças"], resposta: "A) Animais e árvores", explicacao: "Guardião da floresta." },
+        { pergunta: "Como o Boitatá aparece?", opcoes: ["A) Cobra de fogo", "B) Vento", "C) Risadas", "D) Sombra"], resposta: "A) Cobra de fogo", explicacao: "Protetor contra incêndios." }
+      ],
+      creepypasta: [
+        { pergunta: "Jeff The Killer e Liu são o que?", opcoes: ["A) Casal", "B) Irmãos", "C) Rivais"], resposta: "B) Irmãos", explicacao: "Irmãos na lore original." },
+        { pergunta: "Relação de Jane e Jeff?", opcoes: ["A) Amor", "B) Ódio", "C) Amigos"], resposta: "B) Ódio", explicacao: "Jane quer vingança." },
+        { pergunta: "Principais proxies do Slenderman?", opcoes: ["A) Masky, Hoodie, Ticci Toby", "B) Jeff, Ben, Nina", "C) Nenhum"], resposta: "A) Masky, Hoodie, Ticci Toby", explicacao: "Proxies clássicos." },
+        { pergunta: "Nome verdadeiro do Bloody Painter?", opcoes: ["A) Helen Otis", "B) Jack Dahnmer", "C) Timothy Wright"], resposta: "A) Helen Otis", explicacao: "Helen é o nome real." },
+        { pergunta: "Sally foi morta por quem?", opcoes: ["A) Tio", "B) Pai", "C) Prima"], resposta: "A) Tio", explicacao: "Abusada e morta pelo tio." },
+        { pergunta: "Primeira vítima de Jeff?", opcoes: ["A) Gato", "B) Homem", "C) Isaac"], resposta: "A) Gato", explicacao: "Começou com animais." },
+        { pergunta: "Sam e Sally são o que?", opcoes: ["A) Irmãos", "B) Rivais", "C) Primos"], resposta: "A) Irmãos", explicacao: "Irmãos na lore." },
+        { pergunta: "Frase clássica de Jeff?", opcoes: ["A) Go to sleep", "B) Sweet dreams", "C) Night night"], resposta: "A) Go to sleep", explicacao: "Frase icônica." },
+        { pergunta: "Ben Drowned está ligado a qual jogo?", opcoes: ["A) Majora's Mask", "B) Free Fire", "C) Minecraft"], resposta: "A) Majora's Mask", explicacao: "Cartridge amaldiçoado." },
+        { pergunta: "Zalgo é o que de Lazari?", opcoes: ["A) Pai", "B) Irmão", "C) Nada"], resposta: "A) Pai", explicacao: "Zalgo é o pai dela." },
+        { pergunta: "Frase da Clockwork?", opcoes: ["A) Your time is up", "B) Go to sleep", "C) Nenhuma"], resposta: "A) Your time is up", explicacao: "Frase assinatura." },
+        { pergunta: "Arma de Ticci Toby?", opcoes: ["A) Machado", "B) Faca", "C) Martelo"], resposta: "A) Machado", explicacao: "Armas duplas." },
+        { pergunta: "Nome real de Hoodie?", opcoes: ["A) Brian Thomas", "B) Timothy Wright", "C) Tobias Rogers"], resposta: "A) Brian Thomas", explicacao: "Brian Thomas." },
+        { pergunta: "Ticci Toby tem tiques?", opcoes: ["A) Sim", "B) Não", "C) Só em estresse"], resposta: "A) Sim", explicacao: "Tourette na lore." },
+        { pergunta: "Eyeless Jack come o que?", opcoes: ["A) Rins", "B) Corações", "C) Fígado"], resposta: "A) Rins", explicacao: "Come rins humanos." }
+      ]
     };
 
     let nome, tema, numPerguntas, quizPerguntas = [], currentQuestion = 0, score = 0;
@@ -237,8 +282,8 @@
       let todas = tema === 'misto' ? [...perguntas.filmes, ...perguntas.lendas, ...perguntas.creepypasta] : (perguntas[tema] || []);
       quizPerguntas = shuffle(todas).slice(0, numPerguntas);
 
-      if (quizPerguntas.length < 10) {
-        alert("Não há perguntas suficientes nesse tema. Escolha 'Misto' ou outro.");
+      if (quizPerguntas.length < numPerguntas) {
+        alert(`Não há perguntas suficientes para ${numPerguntas} no tema escolhido. Escolha "Misto" ou diminua o número.`);
         return;
       }
 
@@ -315,22 +360,6 @@
           await navigator.share({title: "Minha Ceifança", text: texto, url: location.href});
         } catch(e) {
           navigator.clipboard.writeText(texto);
-          alert("Compartilhamento cancelado. Texto copiado para colar!");
+          alert("Compartilhamento cancelado. Texto copiado!");
         }
-      } else {
-        navigator.clipboard.writeText(texto);
-        alert("Texto copiado! Cole no Telegram, WhatsApp etc.");
-      }
-    }
-
-    function reiniciar() {
-      location.reload();
-    }
-
-    // Inicia som de fundo após primeiro clique (regra do navegador)
-    document.addEventListener('click', () => {
-      if (!muted) bgSound.play().catch(e => console.log("Autoplay bloqueado:", e));
-    }, {once: true});
-  </script>
-</body>
-</html>
+      } e
