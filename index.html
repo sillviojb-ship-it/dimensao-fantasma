@@ -214,6 +214,7 @@
       if (muted) bgSound.pause(); else bgSound.play().catch(e=>console.log("Som bloqueado:",e));
     }
 
+    // Perguntas completas (15 por categoria)
     const perguntas = {
       filmes: [
         { pergunta: "Quem possui a garota do exorcista?", opcoes: ["A) Pazuzu", "B) Embora", "C) Cairne", "D) Belzebu"], resposta: "A) Pazuzu", explicacao: "Pazuzu é o demônio antigo que possui Regan em O Exorcista." },
@@ -360,6 +361,4 @@
           await navigator.share({title: "Minha Ceifança", text: texto, url: location.href});
         } catch(e) {
           navigator.clipboard.writeText(texto);
-          alert("Compartilhamento cancelado. Texto copiado!");
-        }
-      } e
+          alert("Compartilhamento ca
