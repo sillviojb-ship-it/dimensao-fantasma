@@ -11,31 +11,23 @@
       background: #000 url('https://images.unsplash.com/photo-1507499739999-097706ad8914?auto=format&fit=crop&q=80') center/cover fixed;
       color: #ffcccc; font-family: 'Special Elite', cursive; margin: 0; padding: 0; overflow-x: hidden;
     }
-    body::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 1; pointer-events: none; }
-    
+    body::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.88); z-index: 1; pointer-events: none; }
     .container { position: relative; z-index: 2; max-width: 800px; margin: 0 auto; padding: 20px; text-align: center; }
-    h1 { font-family: 'Creepster', cursive; font-size: clamp(2.5rem, 8vw, 5rem); color: var(--vermelho); text-shadow: 0 0 20px var(--vinho); margin: 20px 0; }
-    
-    .card { background: rgba(20,0,0,0.9); border: 2px solid var(--vinho); padding: 20px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
-    
+    h1 { font-family: 'Creepster', cursive; font-size: clamp(2.5rem, 8vw, 5rem); color: var(--vermelho); text-shadow: 0 0 20px var(--vinho); }
+    .card { background: rgba(20,0,0,0.95); border: 2px solid var(--vinho); padding: 20px; border-radius: 15px; margin-bottom: 30px; }
     button, input, select, textarea { 
       width: 90%; max-width: 400px; padding: 15px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--vinho);
-      background: #1a0000; color: #ffcccc; font-family: inherit; font-size: 1.1rem;
+      background: #110000; color: #ffcccc; font-family: inherit; font-size: 1.1rem;
     }
-    button { background: linear-gradient(45deg, var(--vinho), var(--vermelho)); color: white; border: none; cursor: pointer; font-weight: bold; }
-    
-    .option { background: rgba(40,0,0,0.6); padding: 15px; margin: 8px auto; border: 1px solid var(--vinho); border-radius: 8px; cursor: pointer; transition: 0.3s; max-width: 400px; }
-    .option:hover { background: var(--vermelho); color: black; }
-    
+    button { background: linear-gradient(45deg, var(--vinho), var(--vermelho)); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    button:hover { transform: scale(1.02); box-shadow: 0 0 15px var(--vermelho); }
+    .option { background: rgba(40,0,0,0.7); padding: 15px; margin: 8px auto; border: 1px solid var(--vinho); border-radius: 8px; cursor: pointer; max-width: 400px; }
     #quiz-game, #balloon { display: none; }
-    #balloon { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a0000; border: 3px solid var(--vermelho); padding: 25px; z-index: 1000; width: 80%; border-radius: 15px; box-shadow: 0 0 50px #000; }
-    
-    .lista-filmes { text-align: left; background: #000; padding: 15px; border-radius: 8px; border-left: 4px solid var(--vermelho); font-size: 0.9rem; line-height: 1.6; max-height: 300px; overflow-y: auto; }
-    
-    @keyframes shake { 0% {transform: translate(1px, 1px);} 20% {transform: translate(-3px, 0px);} 40% {transform: translate(1px, -1px);} 100% {transform: translate(0,0);} }
-    .shake { animation: shake 0.4s; background: rgba(255,0,0,0.2) !important; }
-    
-    .admin-trigger { color: #222; font-size: 10px; cursor: pointer; margin-top: 50px; display: block; text-decoration: none; }
+    #balloon { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a0000; border: 3px solid var(--vermelho); padding: 25px; z-index: 1000; width: 85%; border-radius: 15px; text-align: center; }
+    .lista-filmes { text-align: left; background: #050000; padding: 15px; border-radius: 8px; border-left: 4px solid var(--vermelho); font-size: 0.9rem; white-space: pre-wrap; }
+    @keyframes shake { 0% {transform: translate(2px, 2px);} 25% {transform: translate(-3px, -2px);} 50% {transform: translate(3px, 2px);} 100% {transform: translate(0,0);} }
+    .shake { animation: shake 0.4s ease-in-out; }
+    .admin-trigger { color: #111; font-size: 12px; cursor: pointer; text-decoration: none; margin-top: 40px; display: block; }
   </style>
 </head>
 <body id="main-body">
@@ -45,133 +37,166 @@
 
     <div class="card">
         <h2 style="color: var(--vermelho);">📺 Programação de Hoje</h2>
-        <div class="lista-filmes" id="display-lista">
-            Aguardando sinal da Dimensão...
-        </div>
-        <button onclick="window.location.href='https://t.me/+ewlyVq2Rsno3NGMx'" style="margin-top:15px; font-size: 0.9rem;">ENTRAR NO TELEGRAM</button>
+        <div class="lista-filmes" id="display-lista">Aguardando atualização do além...</div>
+        <button onclick="window.location.href='https://t.me/+ewlyVq2Rsno3NGMx'">ACESSAR CANAL TELEGRAM</button>
     </div>
 
     <div class="card" id="quiz-init">
-        <h2 style="color: var(--vermelho);">💀 Desafio do Ceifador</h2>
-        <p>Você tem coragem de testar seus conhecimentos?</p>
-        <input type="text" id="nome-player" placeholder="Seu nome, Alma...">
+        <h2 style="color: var(--vermelho);">💀 Quiz Ceifador</h2>
+        <input type="text" id="nome-player" placeholder="Seu nome, Alma Perdida...">
         <select id="tema-quiz">
             <option value="filmes">Filmes de Terror</option>
             <option value="lendas">Lendas Urbanas</option>
             <option value="creepypasta">Creepypastas</option>
-            <option value="misto">Modo Misto</option>
+            <option value="misto" selected>Tudo Misturado</option>
         </select>
-        <button onclick="iniciarQuiz()">INICIAR RITUAL</button>
+        <button onclick="iniciarRitual()">INICIAR RITUAL</button>
     </div>
 
     <div class="card" id="quiz-game">
-        <div id="pergunta" style="font-size: 1.3rem; margin-bottom: 20px;"></div>
+        <div id="pergunta" style="font-size: 1.4rem; margin-bottom: 20px; font-weight: bold;"></div>
         <div id="opcoes"></div>
-        <div id="score" style="color: var(--vermelho); font-weight: bold; margin-top: 15px;">Almas Ceifadas: 0</div>
+        <div id="score" style="color: var(--vermelho); margin-top: 15px;">Almas Ceifadas: 0</div>
     </div>
 
     <a class="admin-trigger" onclick="abrirAdmin()">. . .</a>
     <div id="painel-admin" style="display:none;" class="card">
-        <h3 style="color: var(--vermelho);">📡 TRANSMISSOR DE SINAIS</h3>
+        <h3>📡 DISPARADOR DE SINAIS</h3>
         <input type="password" id="senha-admin" placeholder="Chave Mestra">
-        <textarea id="texto-sinal" rows="10" placeholder="Cole a lista de filmes aqui..."></textarea>
-        <button onclick="enviarSinal()">DISPARAR PARA TELEGRAM</button>
+        <textarea id="texto-sinal" rows="8" placeholder="Cole a lista de filmes aqui..."></textarea>
+        <button onclick="enviarSinal()">ENVIAR PARA SITE E TELEGRAM</button>
     </div>
 </div>
 
 <div id="balloon">
-    <p id="balloon-text" style="font-size: 1.2rem;"></p>
-    <button onclick="proximaPergunta()">CONTINUAR</button>
+    <p id="balloon-text"></p>
+    <button onclick="proxima()">CONTINUAR</button>
 </div>
 
 <script>
-// --- BANCO DE PERGUNTAS (Resumido para o exemplo, use as 60 do anterior) ---
-const perguntas = {
-    filmes: [
-        { q: "Quem é o vilão de Halloween?", ops: ["Jason", "Michael Myers", "Freddy", "Ghostface"], r: "Michael Myers" },
-        { q: "Qual o nome da boneca maldita?", ops: ["Annabelle", "Tiffany", "Brahms", "Samara"], r: "Annabelle" }
-        // ... adicione as outras que te enviei
-    ],
-    lendas: [
-        { q: "Qual lenda tem pés para trás?", ops: ["Curupira", "Saci", "Iara", "Cuca"], r: "Curupira" }
-    ],
-    creepypasta: [
-        { q: "Qual a frase de Jeff the Killer?", ops: ["Go to sleep", "Smile", "Die", "Good night"], r: "Go to sleep" }
-    ]
-};
-
-// --- LÓGICA DO QUIZ ---
-let listaAtiva = [], idx = 0, pontos = 0;
+// SONS
+const s_bg = new Audio('https://www.myinstants.com/media/sounds/horror-background-music.mp3'); s_bg.loop = true;
 const s_erro = new Audio('https://www.myinstants.com/media/sounds/evil-laugh.mp3');
 const s_acerto = new Audio('https://www.myinstants.com/media/sounds/ding-sound-effect_1.mp3');
 
-function iniciarQuiz() {
+const perguntas = {
+    filmes: [
+        { q: "Quem possui Regan em O Exorcista?", ops: ["Pazuzu", "Cairne", "Belzebu", "Valak"], r: "Pazuzu" },
+        { q: "Qual o vilão de Halloween?", ops: ["Jason", "Michael Myers", "Freddy", "Ghostface"], r: "Michael Myers" },
+        { q: "Qual o nome da boneca maldita?", ops: ["Annabelle", "Tiffany", "Chucky", "Samara"], r: "Annabelle" },
+        { q: "Onde se passa Sexta-Feira 13?", ops: ["Crystal Lake", "Haddonfield", "Springwood", "Woodsboro"], r: "Crystal Lake" },
+        { q: "Qual filme tem a frase 'See dead people'?", ops: ["O Sexto Sentido", "Os Outros", "Sinais", "Grito"], r: "O Sexto Sentido" },
+        { q: "Quem dirigiu Psicose?", ops: ["Hitchcock", "Carpenter", "Kubrick", "Wes Craven"], r: "Hitchcock" },
+        { q: "Qual o nome do palhaço de It?", ops: ["Pennywise", "Art", "Twisty", "Joker"], r: "Pennywise" },
+        { q: "Qual o vilão dos sonhos?", ops: ["Freddy Krueger", "Pinhead", "Candyman", "Jigsaw"], r: "Freddy Krueger" },
+        { q: "O que o Ghostface pergunta?", ops: ["Qual seu filme favorito?", "Onde você está?", "Quer brincar?", "Quem é?"], r: "Qual seu filme favorito?" },
+        { q: "Qual filme usa uma fita VHS?", ops: ["O Chamado", "A Entidade", "VHS", "Atividade Paranormal"], r: "O Chamado" },
+        { q: "Qual o nome do hotel de O Iluminado?", ops: ["Overlook", "Bates", "Cortez", "Dolphin"], r: "Overlook" },
+        { q: "Em que filme há um labirinto de milho?", ops: ["Colheita Maldita", "X", "Pearl", "The Witch"], r: "Colheita Maldita" },
+        { q: "Quem é o boneco de Child's Play?", ops: ["Chucky", "Billy", "Slappy", "Brahms"], r: "Chucky" },
+        { q: "Qual a cor do balão de It?", ops: ["Vermelho", "Preto", "Branco", "Azul"], r: "Vermelho" },
+        { q: "Qual filme se passa num convento?", ops: ["A Freira", "O Exorcista", "Midsommar", "Hereditário"], r: "A Freira" },
+        { q: "Qual o nome do tubarão de Spielberg?", ops: ["Jaws", "Bruce", "Meg", "Deep Blue"], r: "Bruce" },
+        { q: "Quem usa uma serra elétrica?", ops: ["Leatherface", "Jason", "Ash", "Pinhead"], r: "Leatherface" },
+        { q: "Qual filme tem um 'Cubo das Almas'?", ops: ["Hellraiser", "Saw", "Cube", "Wishmaster"], r: "Hellraiser" },
+        { q: "O que Regan come no Exorcista?", ops: ["Sopa de ervilha", "Mingau", "Carne", "Nada"], r: "Sopa de ervilha" },
+        { q: "Quem é o pai de Jason Voorhees?", ops: ["Elias", "Pamela", "Michael", "Não tem"], r: "Elias" }
+    ],
+    lendas: [
+        { q: "Qual lenda tem pés para trás?", ops: ["Curupira", "Saci", "Iara", "Cuca"], r: "Curupira" },
+        { q: "Quem vira lobisomem?", ops: ["7º filho homem", "1º filho", "Gêmeo", "Filho de bruxa"], r: "7º filho homem" },
+        { q: "Qual lenda fuma cachimbo?", ops: ["Saci", "Boto", "Caipora", "Boitatá"], r: "Saci" },
+        { q: "O que o Boto usa na cabeça?", ops: ["Chapéu", "Coroa", "Boné", "Nada"], r: "Chapéu" },
+        { q: "Quem é a sereia dos rios?", ops: ["Iara", "Cuca", "Matinta", "Pisadeira"], r: "Iara" },
+        { q: "Qual lenda solta fogo pelo pescoço?", ops: ["Mula sem Cabeça", "Boitatá", "Curupira", "Anhangá"], r: "Mula sem Cabeça" },
+        { q: "Quem é a jacaré feiticeira?", ops: ["Cuca", "Matinta", "Iara", "Pisadeira"], r: "Cuca" },
+        { q: "Como o Saci viaja?", ops: ["Redemoinho", "Voo", "Corrida", "Salto"], r: "Redemoinho" },
+        { q: "O que o Boitatá é?", ops: ["Cobra de fogo", "Cavalo", "Pássaro", "Peixe"], r: "Cobra de fogo" },
+        { q: "Quem pisa na barriga das pessoas?", ops: ["Pisadeira", "Cuca", "Matinta", "Caipora"], r: "Pisadeira" },
+        { q: "Qual lenda mora na Amazônia?", ops: ["Matinta Pereira", "Corpo Seco", "Mula", "Saci"], r: "Matinta Pereira" },
+        { q: "Quem protege a caça?", ops: ["Caipora", "Curupira", "Anhangá", "Todos"], r: "Todos" },
+        { q: "O que afasta o lobisomem?", ops: ["Prata", "Alho", "Sal", "Fogo"], r: "Prata" },
+        { q: "Qual lenda é um morto rejeitado?", ops: ["Corpo Seco", "Zumbi", "Assombração", "Vampiro"], r: "Corpo Seco" },
+        { q: "O Mapinguari tem boca onde?", ops: ["Barriga", "Costas", "Pés", "Mãos"], r: "Barriga" },
+        { q: "Quem assobia na mata?", ops: ["Matinta", "Saci", "Curupira", "Todos"], r: "Todos" },
+        { q: "O Capelobo bebe o quê?", ops: ["Cérebro", "Sangue", "Água", "Leite"], r: "Cérebro" },
+        { q: "A Loira do Banheiro aparece onde?", ops: ["Escolas", "Hospitais", "Hotéis", "Casas"], r: "Escolas" },
+        { q: "O que o Saci quer?", ops: ["Fazer travessuras", "Matar", "Comer", "Dormir"], r: "Fazer travessuras" },
+        { q: "Quem tem um olho na testa?", ops: ["Mapinguari", "Curupira", "Cuca", "Saci"], r: "Mapinguari" }
+    ],
+    creepypasta: [
+        { q: "Qual a frase de Jeff the Killer?", ops: ["Go to sleep", "Smile", "Die", "Good night"], r: "Go to sleep" },
+        { q: "Quem não tem rosto?", ops: ["Slenderman", "Jeff", "Jack", "The Rake"], r: "Slenderman" },
+        { q: "Ben Drowned está em qual jogo?", ops: ["Zelda", "Mario", "Sonic", "Pokemon"], r: "Zelda" },
+        { q: "Qual o órgão que Jack come?", ops: ["Rins", "Coração", "Olhos", "Fígado"], r: "Rins" },
+        { q: "O que são as Backrooms?", ops: ["Salas amarelas", "Um porão", "Sótão", "Hospital"], r: "Salas amarelas" },
+        { q: "Qual a frase de Sally?", ops: ["Play with me?", "Die", "Go away", "Help"], r: "Play with me?" },
+        { q: "Quem usa machados?", ops: ["Ticci Toby", "Hoodie", "Masky", "Jeff"], r: "Ticci Toby" },
+        { q: "O que Smile Dog quer?", ops: ["Espalhar a palavra", "Comer", "Latir", "Morder"], r: "Espalhar a palavra" },
+        { q: "Qual a cor dos olhos de Sonic.exe?", ops: ["Pretos e vermelhos", "Azuis", "Verdes", "Brancos"], r: "Pretos e vermelhos" },
+        { q: "Quem é a entidade do Caos?", ops: ["Zalgo", "Slender", "The Rake", "Bob"], r: "Zalgo" },
+        { q: "Onde o Rake aparece?", ops: ["Pé da cama", "Armário", "Teto", "Janela"], r: "Pé da cama" },
+        { q: "Laughing Jack era o quê?", ops: ["Amigo imaginário", "Boneco", "Humano", "Fantasma"], r: "Amigo imaginário" },
+        { q: "O que Hoodie usa?", ops: ["Máscara triste", "Capuz", "Óculos", "Lenço"], r: "Máscara triste" },
+        { q: "Qual a frase de Clockwork?", ops: ["Your time is up", "Die", "Tick Tock", "Now"], r: "Your time is up" },
+        { q: "Quem pinta com sangue?", ops: ["Bloody Painter", "Jeff", "Jane", "Puppeteer"], r: "Bloody Painter" },
+        { q: "Qual música mata em Pokemon?", ops: ["Lavender Town", "Pallet", "Victory", "Gym"], r: "Lavender Town" },
+        { q: "O que causou o experimento russo?", ops: ["Gás do sono", "Remédio", "Comida", "Luz"], r: "Gás do sono" },
+        { q: "Quem é o inimigo do Jeff?", ops: ["Jane the Killer", "Slender", "Jack", "Nina"], r: "Jane the Killer" },
+        { q: "Candle Cove é o quê?", ops: ["Show de TV", "Um navio", "Uma ilha", "Um livro"], r: "Show de TV" },
+        { q: "O que o Puppeteer controla?", ops: ["Fios", "Mentes", "Sonhos", "Corpos"], r: "Fios" }
+    ]
+};
+
+let listaA = [], idxA = 0, ptsA = 0;
+
+function iniciarRitual() {
+    s_bg.play();
     const t = document.getElementById('tema-quiz').value;
     let base = t === 'misto' ? [...perguntas.filmes, ...perguntas.lendas, ...perguntas.creepypasta] : [...perguntas[t]];
-    listaAtiva = base.sort(() => Math.random() - 0.5).slice(0, 15);
+    listaA = base.sort(() => Math.random() - 0.5).slice(0, 15);
     document.getElementById('quiz-init').style.display = 'none';
     document.getElementById('quiz-game').style.display = 'block';
-    renderizar();
+    exibirQ();
 }
 
-function renderizar() {
-    if(idx >= listaAtiva.length) {
-        document.getElementById('quiz-game').innerHTML = `<h2>RITUAL COMPLETO</h2><p>Você ceifou ${pontos} almas!</p><button onclick="location.reload()">RECOMEÇAR</button>`;
+function exibirQ() {
+    if(idxA >= listaA.length) {
+        document.getElementById('quiz-game').innerHTML = `<h2>RITUAL FINALIZADO</h2><p>Ceifaste ${ptsA} almas!</p><button onclick="location.reload()">NOVO RITUAL</button>`;
         return;
     }
-    const q = listaAtiva[idx];
+    const q = listaA[idxA];
     document.getElementById('pergunta').textContent = q.q;
-    const box = document.getElementById('opcoes');
-    box.innerHTML = '';
+    const box = document.getElementById('opcoes'); box.innerHTML = '';
     q.ops.forEach(op => {
-        const d = document.createElement('div');
-        d.className = 'option';
-        d.textContent = op;
+        const d = document.createElement('div'); d.className = 'option'; d.textContent = op;
         d.onclick = () => {
-            if(op === q.r) {
-                pontos++; s_acerto.play();
-                document.getElementById('score').textContent = `Almas Ceifadas: ${pontos}`;
-                idx++; renderizar();
-            } else {
-                s_erro.play();
-                document.getElementById('main-body').classList.add('shake');
-                document.getElementById('balloon-text').innerHTML = `💀 <b>ERROU!</b><br>A correta era: ${q.r}`;
-                document.getElementById('balloon').style.display = 'block';
-                setTimeout(() => document.getElementById('main-body').classList.remove('shake'), 400);
-            }
+            if(op === q.r) { ptsA++; s_acerto.play(); document.getElementById('score').textContent = `Almas Ceifadas: ${ptsA}`; idxA++; exibirQ(); }
+            else { s_erro.play(); document.getElementById('main-body').classList.add('shake'); document.getElementById('balloon-text').innerHTML = `💀 <b>SUA ALMA É MINHA!</b><br>A resposta correta era: ${q.r}`; document.getElementById('balloon').style.display = 'block'; setTimeout(()=>document.getElementById('main-body').classList.remove('shake'), 400); }
         };
         box.appendChild(d);
     });
 }
 
-function proximaPergunta() {
-    document.getElementById('balloon').style.display = 'none';
-    idx++; renderizar();
-}
+function proxima() { document.getElementById('balloon').style.display = 'none'; idxA++; exibirQ(); }
 
-// --- LÓGICA ADMIN E TELEGRAM ---
-function abrirAdmin() {
-    let p = prompt("SENHA DE ACESSO:");
-    if(p === "1234") document.getElementById('painel-admin').style.display = 'block';
-}
+function abrirAdmin() { let p = prompt("SENHA:"); if(p === "1234") document.getElementById('painel-admin').style.display = 'block'; }
 
 async function enviarSinal() {
     const texto = document.getElementById('texto-sinal').value;
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzunSGBT4qE9hyH2Ieh4RGeJxrfE5qmJDHsLkJ4t6BHm7pxHUX5H86KtA2WEDB8IVuNzA/exec";
+    const senha = document.getElementById('senha-admin').value;
+    if(senha !== "1234") return alert("SENHA ERRADA");
     
-    // Atualiza a visualização no site na hora
     document.getElementById('display-lista').innerText = texto;
-    localStorage.setItem('ultima_lista', texto);
-
-    await fetch(scriptURL, { method: "POST", mode: "no-cors", body: JSON.stringify({ texto: texto }) });
-    alert("SINAL ENVIADO!");
+    localStorage.setItem('df_lista', texto);
+    
+    // API DO TELEGRAM (Google Script)
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzunSGBT4qE9hyH2Ieh4RGeJxrfE5qmJDHsLkJ4t6BHm7pxHUX5H86KtA2WEDB8IVuNzA/exec";
+    fetch(scriptURL, { method: "POST", mode: "no-cors", body: JSON.stringify({ texto: texto }) });
+    alert("SINAL DISPARADO!");
 }
 
-// Carregar última lista ao abrir
-window.onload = () => {
-    const salva = localStorage.getItem('ultima_lista');
-    if(salva) document.getElementById('display-lista').innerText = salva;
-}
+window.onload = () => { const s = localStorage.getItem('df_lista'); if(s) document.getElementById('display-lista').innerText = s; }
 </script>
 </body>
 </html>
