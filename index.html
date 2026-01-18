@@ -1,56 +1,188 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz Fantasma 👻 – Dimensão do Terror</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👻</text></svg>">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz Ceifador 💀 – Dimensão do Terror</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💀</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&display=swap" rel="stylesheet">
+  
   <style>
-    body { background: #0a0015; color: #e0e0ff; font-family: 'Special Elite', cursive; margin: 0; padding: 0; overflow: hidden; position: relative; min-height: 100vh; }
-    body::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(10,0,21,0.6), rgba(30,0,60,0.4)); animation: pulse 12s infinite alternate; }
-    @keyframes pulse { 0% { opacity: 0.4; } 100% { opacity: 0.7; } }
-    .container { position: relative; z-index: 2; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; }
-    h1 { font-family: 'Creepster', cursive; font-size: 6rem; color: #d4d4ff; text-shadow: 0 0 20px #8b00ff; animation: glitch 4s infinite; }
-    @keyframes glitch { 0%,100% { transform: translate(0); } 20% { transform: translate(-3px,3px); } 40% { transform: translate(3px,-3px); } }
-    input, select, button { width: 100%; max-width: 400px; padding: 1rem; margin: 1rem 0; font-size: 1.2rem; background: rgba(20,0,40,0.6); border: 2px solid #8b00ff; color: white; border-radius: 8px; }
-    button { cursor: pointer; background: linear-gradient(#4b0082,#8b00ff); }
-    button:hover { transform: scale(1.05); }
-    #quiz-section, #end-section { display: none; }
-    .option { padding: 1rem; background: rgba(20,0,40,0.8); border: 2px solid #8b00ff; margin: 0.5rem 0; cursor: pointer; }
-    .option:hover { border-color: #ff00ff; }
-    #balloon { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(255,0,255,0.9); color: black; padding: 2rem; border-radius: 15px; display: none; z-index: 10; }
-    #ranking ol { counter-reset: rank; list-style: none; padding: 0; }
-    #ranking li::before { content: counter(rank) "º – "; counter-increment: rank; color: #ff00ff; font-weight: bold; }
+    body {
+      background: #000 url('https://images.unsplash.com/photo-1507499739999-097706ad8914?auto=format&fit=crop&q=80') center/cover fixed;
+      color: #ffcccc;
+      font-family: 'Special Elite', cursive;
+      margin: 0; padding: 0;
+      overflow: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(0,0,0,0.8), rgba(80,0,0,0.4));
+      animation: pulse 15s infinite alternate;
+    }
+    @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 0.85; } }
+    
+    .container {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    h1 {
+      font-family: 'Creepster', cursive;
+      font-size: clamp(4rem, 14vw, 10rem);
+      color: #ff1a1a;
+      text-shadow: 0 0 30px #8b0000;
+      margin-bottom: 1.5rem;
+      animation: glitch 6s infinite;
+    }
+    @keyframes glitch {
+      0%,100% { transform: translate(0); }
+      20% { transform: translate(-5px,5px); }
+      40% { transform: translate(5px,-5px); }
+    }
+    
+    input, select, button {
+      width: 100%;
+      max-width: 450px;
+      padding: 1.2rem;
+      margin: 1rem 0;
+      font-size: 1.3rem;
+      background: rgba(30,0,0,0.7);
+      border: 2px solid #8b0000;
+      color: #ffcccc;
+      border-radius: 10px;
+      font-family: inherit;
+    }
+    button {
+      background: linear-gradient(45deg, #4b0000, #8b0000);
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 40px #ff0000;
+    }
+    
+    .option {
+      padding: 1.2rem;
+      background: rgba(40,0,0,0.8);
+      border: 2px solid #8b0000;
+      margin: 0.8rem 0;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    .option:hover {
+      border-color: #ff1a1a;
+      box-shadow: 0 0 20px #ff1a1a80;
+    }
+    
+    #balloon {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(139,0,0,0.95);
+      color: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 0 50px #ff0000;
+      display: none;
+      z-index: 10;
+      max-width: 90%;
+      text-align: center;
+    }
+    
+    #ranking ol {
+      counter-reset: rank;
+      list-style: none;
+      padding: 0;
+    }
+    #ranking li::before {
+      content: counter(rank) "º – ";
+      counter-increment: rank;
+      color: #ff1a1a;
+      font-weight: bold;
+      font-size: 1.6rem;
+    }
+    
+    #mute-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #ffcccc;
+      font-size: 2.5rem;
+      cursor: pointer;
+    }
+    
+    .ceifador {
+      position: absolute;
+      font-size: 12rem;
+      opacity: 0.1;
+      pointer-events: none;
+      animation: float 35s infinite linear;
+    }
+    .ceifador:nth-child(1) { top: 5%; left: 5%; }
+    .ceifador:nth-child(2) { bottom: 10%; right: 5%; animation-direction: reverse; }
+    
+    @keyframes float {
+      0%,100% { transform: translate(0,0); }
+      50% { transform: translate(150px, -120px); }
+    }
   </style>
 </head>
 <body>
+
   <div class="container" id="landing">
-    <h1>Quiz Fantasma 👻</h1>
-    <input type="text" id="nome" placeholder="Nome opcional para ranking">
+    <h1>Quiz Ceifador 💀</h1>
+    
+    <input type="text" id="nome" placeholder="Nome opcional – Ranking das Almas Ceifadas" maxlength="30">
+    
     <select id="tema">
       <option value="filmes">Filmes de Terror</option>
       <option value="lendas">Lendas Urbanas</option>
       <option value="creepypasta">Creepypastas</option>
-      <option value="misto">Misto</option>
+      <option value="misto">Misto (Tudo!)</option>
     </select>
-    <button onclick="iniciarQuiz()">Entrar na Dimensão</button>
+    
+    <label for="qtd">Quantas perguntas você quer responder?</label>
+    <select id="qtd">
+      <option value="10">10 perguntas</option>
+      <option value="12">12 perguntas</option>
+      <option value="15" selected>15 perguntas (padrão)</option>
+      <option value="18">18 perguntas</option>
+      <option value="20">20 perguntas</option>
+    </select>
+    
+    <button onclick="iniciarQuiz()">Entrar no Abismo</button>
   </div>
 
   <div class="container" id="quiz-section">
     <h1 id="quiz-title"></h1>
-    <div id="pergunta"></div>
+    <div id="pergunta" style="font-size:1.8rem; margin:1.5rem 0;"></div>
     <div id="opcoes"></div>
-    <div id="score">Pontos: 0</div>
-    <div id="error-msg" style="color:red; display:none;">Errado!</div>
+    <div id="score" style="font-size:1.5rem; margin:1rem 0;">Almas Ceifadas: 0</div>
+    <div id="error-msg" style="color:#ffcccc; display:none; font-size:1.3rem;">Errado! Sua alma treme...</div>
   </div>
 
   <div class="container" id="end-section">
-    <h1>Fim do Quiz 👻</h1>
-    <div id="resultado"></div>
+    <h1>Fim da Ceifança 💀</h1>
+    <div id="resultado" style="font-size:1.6rem; margin:1.5rem 0;"></div>
     <div id="ranking"></div>
-    <button onclick="compartilharResultado()">Compartilhar</button>
-    <button onclick="reiniciar()">Jogar Novamente</button>
+    <button onclick="compartilharResultado()">Compartilhar Minha Ceifança</button>
+    <button onclick="reiniciar()">Tentar Novamente</button>
   </div>
 
   <div id="balloon">
@@ -58,67 +190,147 @@
     <button onclick="document.getElementById('balloon').style.display='none'">Fechar</button>
   </div>
 
+  <button id="mute-btn" onclick="toggleMute()">🔊</button>
+
+  <div class="ceifador">💀</div>
+  <div class="ceifador">🪦</div>
+
   <script>
-    let nome, tema, quizPerguntas = [], current = 0, score = 0;
-    const perguntas = {
-      filmes: [{pergunta:"Quem possui Regan em O Exorcista?", opcoes:["Pazuzu","Belzebu","Legião","Asmodeus"], resposta:"Pazuzu", explicacao:"Demônio Pazuzu."}],
-      lendas: [{pergunta:"Onde a Iara vive?", opcoes:["Rios","Floresta","Cavernas","Montanhas"], resposta:"Rios", explicacao:"Nas águas doces amazônicas."}],
-      creepypasta: [{pergunta:"Frase de Jeff the Killer?", opcoes:["Go to sleep","Sweet dreams","Night night","Sleep tight"], resposta:"Go to sleep", explicacao:"Clássica."}]
-      // Adicione mais perguntas aqui copiando das versões anteriores
-    };
-    function shuffle(arr) { return arr.sort(() => Math.random() - 0.5).slice(0,3); } // Teste com poucas
-    function iniciarQuiz() {
-      nome = document.getElementById('nome').value.trim() || "Anônimo";
-      tema = document.getElementById('tema').value;
-      let all = tema === 'misto' ? [...perguntas.filmes, ...perguntas.lendas, ...perguntas.creepypasta] : perguntas[tema];
-      quizPerguntas = shuffle(all);
-      document.getElementById('landing').style.display = 'none';
-      document.getElementById('quiz-section').style.display = 'block';
-      document.getElementById('quiz-title').textContent = `Quiz ${tema}`;
-      mostrar();
+    // Sons (funcionam após interação)
+    const bgSound = new Audio('https://freesound.org/data/previews/243/243020_1774763-lq.mp3');
+    bgSound.loop = true; bgSound.volume = 0.25;
+    
+    const correctSound = new Audio('https://freesound.org/data/previews/397/397355_7033107-lq.mp3');
+    correctSound.volume = 0.4;
+    
+    const errorSound = new Audio('https://freesound.org/data/previews/571/571501_1172916-lq.mp3');
+    errorSound.volume = 0.4;
+
+    let muted = false;
+    function toggleMute() {
+      muted = !muted;
+      document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+      if (muted) bgSound.pause(); else bgSound.play().catch(e=>console.log("Som bloqueado:",e));
     }
-    function mostrar() {
-      if (current >= quizPerguntas.length) return finalizar();
-      let q = quizPerguntas[current];
+
+    // Perguntas (copie as completas da versão que funcionou antes)
+    const perguntas = {
+      filmes: [
+        {pergunta: "Quem possui a garota em O Exorcista?", opcoes: ["A) Pazuzu","B) Belzebu","C) Legion","D) Asmodeus"], resposta: "A) Pazuzu", explicacao: "Pazuzu é o demônio principal."},
+        // ... adicione as outras aqui (copie da versão anterior)
+      ],
+      lendas: [ /* copie as de lendas */ ],
+      creepypasta: [ /* copie as de creepypasta */ ]
+    };
+
+    let nome, tema, numPerguntas, quizPerguntas = [], currentQuestion = 0, score = 0;
+
+    function shuffle(arr) {
+      return arr.sort(() => Math.random() - 0.5);
+    }
+
+    function iniciarQuiz() {
+      nome = document.getElementById('nome').value.trim() || "Alma Perdida";
+      tema = document.getElementById('tema').value;
+      numPerguntas = parseInt(document.getElementById('qtd').value);
+
+      let todas = tema === 'misto' ? [...perguntas.filmes, ...perguntas.lendas, ...perguntas.creepypasta] : (perguntas[tema] || []);
+      quizPerguntas = shuffle(todas).slice(0, numPerguntas);
+
+      if (quizPerguntas.length < 10) {
+        alert("Não há perguntas suficientes nesse tema. Escolha 'Misto' ou outro.");
+        return;
+      }
+
+      document.getElementById('landing').style.display = 'none';
+      document.getElementById('quiz-section').style.display = 'flex';
+      document.getElementById('quiz-title').textContent = `Ceifando ${numPerguntas} Almas – Tema: ${tema.toUpperCase()}`;
+      
+      if (!muted) bgSound.play().catch(()=>{});
+      mostrarPergunta();
+    }
+
+    function mostrarPergunta() {
+      if (currentQuestion >= quizPerguntas.length) return finalizarQuiz();
+      
+      const q = quizPerguntas[currentQuestion];
       document.getElementById('pergunta').textContent = q.pergunta;
-      let ops = document.getElementById('opcoes');
+      const ops = document.getElementById('opcoes');
       ops.innerHTML = '';
-      q.opcoes.forEach(o => {
-        let div = document.createElement('div');
+      q.opcoes.forEach(op => {
+        const div = document.createElement('div');
         div.className = 'option';
-        div.textContent = o;
-        div.onclick = () => {
-          if (o === q.resposta) { score++; document.getElementById('score').textContent = `Pontos: ${score}`; current++; mostrar(); }
-          else {
-            document.getElementById('error-msg').style.display = 'block';
-            setTimeout(() => document.getElementById('error-msg').style.display = 'none', 2000);
-            document.getElementById('balloon-text').textContent = `Correta: ${q.resposta} - ${q.explicacao}`;
-            document.getElementById('balloon').style.display = 'block';
-          }
-        };
+        div.textContent = op;
+        div.onclick = () => verificarResposta(op);
         ops.appendChild(div);
       });
     }
-    function finalizar() {
+
+    function verificarResposta(escolhida) {
+      const q = quizPerguntas[currentQuestion];
+      if (escolhida === q.resposta) {
+        score++;
+        document.getElementById('score').textContent = `Almas Ceifadas: ${score}`;
+        if (!muted) correctSound.play().catch(()=>{});
+        currentQuestion++;
+        mostrarPergunta();
+      } else {
+        if (!muted) errorSound.play().catch(()=>{});
+        document.getElementById('error-msg').style.display = 'block';
+        setTimeout(() => document.getElementById('error-msg').style.display = 'none', 2500);
+        document.getElementById('balloon-text').textContent = `A correta era: \( {q.resposta}\n \){q.explicacao}`;
+        document.getElementById('balloon').style.display = 'block';
+      }
+    }
+
+    function finalizarQuiz() {
       document.getElementById('quiz-section').style.display = 'none';
-      document.getElementById('end-section').style.display = 'block';
-      document.getElementById('resultado').textContent = `Acertou ${score} de ${quizPerguntas.length}!`;
-      let r = JSON.parse(localStorage.getItem('ranking') || '[]');
-      r.push({nome, score});
-      r.sort((a,b)=>b.score - a.score);
-      r = r.slice(0,5);
-      localStorage.setItem('ranking', JSON.stringify(r));
-      let html = '<h2>Hall dos Melhores</h2><ol>';
-      r.forEach(i => html += `<li>${i.nome} - ${i.score}</li>`);
+      document.getElementById('end-section').style.display = 'flex';
+      bgSound.pause();
+
+      let msg = `Você ceifou ${score} de ${quizPerguntas.length} almas! `;
+      if (score > quizPerguntas.length * 0.75) msg += "Ceifador lendário! 💀";
+      else if (score > quizPerguntas.length * 0.4) msg += "Alma resistente... por enquanto 😈";
+      else msg += "Sua alma foi ceifada fácil demais... 🪦";
+      document.getElementById('resultado').textContent = msg;
+
+      let ranking = JSON.parse(localStorage.getItem('rankingCeifador') || '[]');
+      ranking.push({nome, score, total: quizPerguntas.length, tema});
+      ranking.sort((a,b) => b.score - a.score);
+      ranking = ranking.slice(0,10);
+      localStorage.setItem('rankingCeifador', JSON.stringify(ranking));
+
+      let html = '<h2>Hall das Almas Ceifadas 💀</h2><ol>';
+      ranking.forEach(r => {
+        html += `<li>${r.nome} – \( {r.score}/ \){r.total} (${r.tema})</li>`;
+      });
       html += '</ol>';
       document.getElementById('ranking').innerHTML = html;
     }
-    function compartilharResultado() {
-      let texto = `Eu fiz ${score} pontos no Quiz Fantasma! 👻 Tente você: https://sillviojb-ship-it.github.io/dimensao-fantasma/`;
-      navigator.clipboard.writeText(texto);
-      alert('Resultado copiado! Cole no Telegram ou WhatsApp.');
+
+    async function compartilharResultado() {
+      const texto = `Ceifei ${score} de \( {quizPerguntas.length} almas no Quiz Ceifador ( \){tema})! 💀 E você, aguenta? Tente aqui: https://sillviojb-ship-it.github.io/dimensao-fantasma/`;
+      if (navigator.share) {
+        try {
+          await navigator.share({title: "Minha Ceifança", text: texto, url: location.href});
+        } catch(e) {
+          navigator.clipboard.writeText(texto);
+          alert("Compartilhamento cancelado. Texto copiado para colar!");
+        }
+      } else {
+        navigator.clipboard.writeText(texto);
+        alert("Texto copiado! Cole no Telegram, WhatsApp etc.");
+      }
     }
-    function reiniciar() { location.reload(); }
+
+    function reiniciar() {
+      location.reload();
+    }
+
+    // Inicia som de fundo após primeiro clique (regra do navegador)
+    document.addEventListener('click', () => {
+      if (!muted) bgSound.play().catch(e => console.log("Autoplay bloqueado:", e));
+    }, {once: true});
   </script>
 </body>
 </html>
