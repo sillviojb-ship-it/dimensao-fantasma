@@ -941,14 +941,14 @@ if ((ritualStep || waitingGid) && ctx.chat.type === "private") {
     }
   }
   
-// --- [PACTO DE SANGUE: CLONAGEM COM LIMPEZA DE DNA] ---
+// --- [PACTO DE SANGUE: DNA LIMPO] ---
 if (waitingGid && ctx.chat.type === "private") {
   const m = ctx.message;
   if (!m.reply_to_message) return ctx.reply("Responda à mensagem!");
 
   const msg = m.reply_to_message;
   
-  // LIMPEZA CRUCIAL: Remove o campo 'user' para o Emoji Premium não bugar
+  // LIMPEZA: Remove o campo 'user' que faz o Telegram rejeitar o emoji premium no fetch
   const entities = (msg.entities || msg.caption_entities || []).map(ent => {
     const { user, ...rest } = ent;
     return rest;
@@ -974,7 +974,6 @@ if (waitingGid && ctx.chat.type === "private") {
   });
 }
 }
-
   const reply = m.reply_to_message;
   const isAdm = await isAdmin(ctx);
 
