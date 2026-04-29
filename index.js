@@ -1587,7 +1587,7 @@ if (text.startsWith("/delmute")) {
   }
 });
 
-// --- MOTOR DE BOAS-VINDAS (DNA COMPLETO: MÍDIA EMBAIXO + TECLADO + VOZ) ---
+// --- MOTOR DE BOAS-VINDAS COMPLETO (DNA + MÍDIA EMBAIXO) ---
 bot.on('new_chat_members', async (ctx) => {
   if (!redis) return;
   const gId = ctx.chat.id;
@@ -1596,7 +1596,9 @@ bot.on('new_chat_members', async (ctx) => {
   if (!list || list.length === 0) return;
 
   let welcome;
-  try { welcome = JSON.parse(list[Math.floor(Math.random() * list.length)]); } catch (e) { return; }
+  try { 
+    welcome = JSON.parse(list[Math.floor(Math.random() * list.length)]); 
+  } catch (e) { return; }
 
   const u = ctx.from;
   const now = new Date();
@@ -1619,6 +1621,7 @@ bot.on('new_chat_members', async (ctx) => {
   let finalMsg = (welcome.text || "");
   let finalEntities = welcome.entities ? JSON.parse(JSON.stringify(welcome.entities)) : [];
 
+  // RECALCULO DE DNA PARA EMOJIS PREMIUM
   Object.keys(tags).forEach(tag => {
     const replacement = String(tags[tag]);
     while (finalMsg.includes(tag)) {
@@ -1629,33 +1632,45 @@ bot.on('new_chat_members', async (ctx) => {
     }
   });
 
+  // LIMPEZA FINAL DAS ENTIDADES PARA O FETCH ACEITAR
+  const cleanedEntities = finalEntities.map(ent => {
+    const { user, ...rest } = ent; 
+    return rest;
+  });
+
   try {
     const body = {
       chat_id: gId,
-      parse_mode: "HTML",
       reply_markup: welcome.reply_markup || undefined,
-      show_caption_above_media: true 
+      show_caption_above_media: true // MÍDIA EMBAIXO
     };
 
     let endpoint = "sendMessage";
+
     if (!welcome.media || welcome.type === 'text') {
-      endpoint = "sendMessage"; body.text = finalMsg; body.entities = finalEntities;
-    } else if (['photo', 'video', 'animation'].includes(welcome.type)) {
-      body.caption = finalMsg; body.caption_entities = finalEntities;
-      body.show_caption_above_media = true; 
-      if (welcome.type === 'photo') endpoint = "sendPhoto", body.photo = welcome.media;
-      else if (welcome.type === 'video') endpoint = "sendVideo", body.video = welcome.media;
-      else if (welcome.type === 'animation') endpoint = "sendAnimation", body.animation = welcome.media;
+      endpoint = "sendMessage"; 
+      body.text = finalMsg; 
+      body.entities = cleanedEntities; 
     } else {
-      if (welcome.type === 'sticker') endpoint = "sendSticker", body.sticker = welcome.media;
-      else if (welcome.type === 'voice') endpoint = "sendVoice", body.voice = welcome.media, body.caption = finalMsg, body.caption_entities = finalEntities;
-      else if (welcome.type === 'audio') endpoint = "sendAudio", body.audio = welcome.media, body.caption = finalMsg, body.caption_entities = finalEntities;
+      body.caption = finalMsg; 
+      body.caption_entities = cleanedEntities;
+      if (welcome.type === 'photo') { endpoint = "sendPhoto"; body.photo = welcome.media; }
+      else if (welcome.type === 'video') { endpoint = "sendVideo"; body.video = welcome.media; }
+      else if (welcome.type === 'animation') { endpoint = "sendAnimation"; body.animation = welcome.media; }
+      else if (welcome.type === 'sticker') { endpoint = "sendSticker"; body.sticker = welcome.media; }
+      else if (welcome.type === 'voice') { endpoint = "sendVoice"; body.voice = welcome.media; }
+      else if (welcome.type === 'audio') { endpoint = "sendAudio"; body.audio = welcome.media; }
     }
 
+    // ENVIO VIA API DIRETA (DNA PURO)
     await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endpoint}`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify(body)
     });
-  } catch (e) { console.log("Erro no welcome:", e.message); }
+  } catch (e) { 
+    console.log("Erro no welcome:", e.message); 
+  }
 });
 
 // --- [FIM DO BLOCO: MOTOR DE BOAS-VINDAS] ---
