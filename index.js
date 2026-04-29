@@ -941,33 +941,34 @@ if ((ritualStep || waitingGid) && ctx.chat.type === "private") {
     }
   }
   
-// --- [BLOCO: CLONAGEM DE BOAS-VINDAS] ---
+// --- [PACTO DE SANGUE: CLONAGEM COM LIMPEZA DE DNA] ---
 if (waitingGid && ctx.chat.type === "private") {
   const m = ctx.message;
-  if (!m.reply_to_message) {
-    return ctx.reply(`${c} <b>ERRO NO RITUAL!</b>\n\nResponda à mensagem que deseja clonar.`, { parse_mode: 'HTML' });
-  }
+  if (!m.reply_to_message) return ctx.reply("Responda à mensagem!");
 
   const msg = m.reply_to_message;
-  const text = msg.text || msg.caption || "";
-  const entities = msg.entities || msg.caption_entities || [];
   
+  // LIMPEZA CRUCIAL: Remove o campo 'user' para o Emoji Premium não bugar
+  const entities = (msg.entities || msg.caption_entities || []).map(ent => {
+    const { user, ...rest } = ent;
+    return rest;
+  });
+
   const mediaId = msg.photo ? msg.photo[msg.photo.length - 1].file_id : (msg.video || msg.animation || msg.sticker || msg.audio || msg.voice || {}).file_id;
   const type = msg.photo ? 'photo' : (msg.video ? 'video' : (msg.animation ? 'animation' : (msg.sticker ? 'sticker' : (msg.audio ? 'audio' : (msg.voice ? 'voice' : 'text')))));
 
   const v = {
-    text: text,
+    text: msg.text || msg.caption || "",
     media: mediaId || null,
     type: type,
-    entities: entities, 
-    reply_markup: msg.reply_markup || undefined,
-    invert_media: true // Nova marcação para forçar mídia embaixo
+    entities: entities, // DNA puro salvo aqui
+    reply_markup: msg.reply_markup || undefined 
   };
 
   await redis.sadd(`w_list:${waitingGid}`, JSON.stringify(v));
   await redis.del(`w_waiting:${ctx.from.id}`);
-
-  return ctx.reply(`${c} <b>DNA EXTRAÍDO!</b>\n\nO Ceifador capturou a essência. Faça o teste no grupo agora.`, {
+  
+  return ctx.reply(`${c} <b>DNA EXTRAÍDO!</b>\nA alma foi limpa e cravada no Redis.`, { 
     parse_mode: "HTML",
     reply_markup: { inline_keyboard: [[{ text: "🏠 Menu", callback_data: `cfg_welcome_${waitingGid}` }]] }
   });
@@ -1602,7 +1603,6 @@ bot.on('new_chat_members', async (ctx) => {
   const now = new Date();
   const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
   
-  // TODAS AS TAGS (MAIÚSCULAS E MINÚSCULAS)
   const tags = {
     '{ID}': u.id, '{id}': u.id,
     '{NAME}': u.first_name || "", '{name}': u.first_name || "",
@@ -1620,7 +1620,6 @@ bot.on('new_chat_members', async (ctx) => {
   let finalMsg = (welcome.text || "");
   let finalEntities = welcome.entities ? JSON.parse(JSON.stringify(welcome.entities)) : [];
 
-  // RECALCULO DE DNA PARA EMOJIS PREMIUM
   Object.keys(tags).forEach(tag => {
     const replacement = String(tags[tag]);
     while (finalMsg.includes(tag)) {
@@ -1631,33 +1630,27 @@ bot.on('new_chat_members', async (ctx) => {
     }
   });
 
-  // LIMPEZA PARA EMOJI PREMIUM FUNCIONAR NO FETCH
-  const cleanedEntities = finalEntities.map(ent => {
-    const { user, ...rest } = ent; 
-    return rest;
-  });
-
   try {
     const body = {
       chat_id: gId,
       parse_mode: "HTML",
-      reply_markup: welcome.reply_markup || undefined, // BOTÕES COLORIDOS AQUI
-      show_caption_above_media: true // MÍDIA EMBAIXO
+      reply_markup: welcome.reply_markup || undefined,
+      show_caption_above_media: true 
     };
 
     let endpoint = "sendMessage";
     if (!welcome.media || welcome.type === 'text') {
-      endpoint = "sendMessage"; body.text = finalMsg; body.entities = cleanedEntities;
+      endpoint = "sendMessage"; body.text = finalMsg; body.entities = finalEntities;
     } else if (['photo', 'video', 'animation'].includes(welcome.type)) {
-      body.caption = finalMsg; body.caption_entities = cleanedEntities;
+      body.caption = finalMsg; body.caption_entities = finalEntities;
+      body.show_caption_above_media = true; 
       if (welcome.type === 'photo') endpoint = "sendPhoto", body.photo = welcome.media;
       else if (welcome.type === 'video') endpoint = "sendVideo", body.video = welcome.media;
       else if (welcome.type === 'animation') endpoint = "sendAnimation", body.animation = welcome.media;
     } else {
-      // TODAS AS OUTRAS MÍDIAS (VOZ, ÁUDIO, STICKER)
       if (welcome.type === 'sticker') endpoint = "sendSticker", body.sticker = welcome.media;
-      else if (welcome.type === 'voice') endpoint = "sendVoice", body.voice = welcome.media, body.caption = finalMsg, body.caption_entities = cleanedEntities;
-      else if (welcome.type === 'audio') endpoint = "sendAudio", body.audio = welcome.media, body.caption = finalMsg, body.caption_entities = cleanedEntities;
+      else if (welcome.type === 'voice') endpoint = "sendVoice", body.voice = welcome.media, body.caption = finalMsg, body.caption_entities = finalEntities;
+      else if (welcome.type === 'audio') endpoint = "sendAudio", body.audio = welcome.media, body.caption = finalMsg, body.caption_entities = finalEntities;
     }
 
     await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endpoint}`, {
