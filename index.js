@@ -1587,6 +1587,82 @@ if (text.startsWith("/delmute")) {
   }
 });
 
+// --- [MOTOR DE BOAS-VINDAS SUPREMO: DNA COMPLETO + INVERSÃO] ---
+bot.on('new_chat_members', async (ctx) => {
+  if (!redis) return;
+  const gId = ctx.chat.id;
+  const status = await redis.get(`stat:welcome:${gId}`);
+  if (status !== "on") return;
+
+  const list = await redis.smembers(`w_list:${gId}`);
+  if (!list || list.length === 0) return;
+
+  let welcome;
+  try { welcome = JSON.parse(list[Math.floor(Math.random() * list.length)]); } catch (e) { return; }
+
+  const u = ctx.from;
+  const now = new Date();
+  const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
+
+  // TODAS AS TAGS (MAIÚSCULAS E MINÚSCULAS)
+  const tags = {
+    '{ID}': u.id, '{id}': u.id,
+    '{NAME}': u.first_name || "", '{name}': u.first_name || "",
+    '{FIRST}': u.first_name || "", '{first}': u.first_name || "",
+    '{SURNAME}': u.last_name || "", '{surname}': u.last_name || "",
+    '{NAMESURNAME}': fullName, '{namesurname}': fullName,
+    '{USERNAME}': u.username ? `@${u.username}` : "n/a", '{username}': u.username ? `@${u.username}` : "n/a",
+    '{MENTION}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`, '{mention}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`,
+    '{GROUPNAME}': ctx.chat.title || "", '{groupname}': ctx.chat.title || "",
+    '{DATE}': now.toLocaleDateString("pt-BR"), '{date}': now.toLocaleDateString("pt-BR"),
+    '{TIME}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), '{time}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    '{WEEKDAY}': now.toLocaleDateString("pt-BR", { weekday: "long" }), '{weekday}': now.toLocaleDateString("pt-BR", { weekday: "long" })
+  };
+
+  let finalMsg = welcome.text || "";
+  let finalEntities = welcome.entities ? JSON.parse(JSON.stringify(welcome.entities)) : [];
+
+  Object.keys(tags).forEach(tag => {
+    const replacement = String(tags[tag]);
+    while (finalMsg.includes(tag)) {
+      const index = finalMsg.indexOf(tag);
+      const diff = replacement.length - tag.length;
+      finalEntities.forEach(ent => { if (ent.offset > index) ent.offset += diff; });
+      finalMsg = finalMsg.replace(tag, replacement);
+    }
+  });
+
+  const body = {
+    chat_id: gId,
+    reply_markup: welcome.reply_markup || undefined,
+    show_above_text: true, 
+    expand_media_caption: true
+  };
+
+  let endpoint = "sendMessage";
+  if (welcome.media) {
+    if (welcome.type === 'photo') { endpoint = "sendPhoto"; body.photo = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
+    else if (welcome.type === 'video') { endpoint = "sendVideo"; body.video = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
+    else if (welcome.type === 'animation') { endpoint = "sendAnimation"; body.animation = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
+    else if (welcome.type === 'sticker') { endpoint = "sendSticker"; body.sticker = welcome.media; }
+    else if (welcome.type === 'audio') { endpoint = "sendAudio"; body.audio = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
+    else if (welcome.type === 'voice') { endpoint = "sendVoice"; body.voice = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
+  } else {
+    body.text = finalMsg; body.entities = finalEntities;
+  }
+
+  const https = require('https');
+  const data = JSON.stringify(body);
+  const options = {
+    hostname: 'api.telegram.org', port: 443, path: `/bot${process.env.BOT_TOKEN}/${endpoint}`,
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) }
+  };
+
+  const req = https.request(options);
+  req.on('error', (e) => console.error("Erro no ritual:", e));
+  req.write(data);
+  req.end();
+});
 
 // --- [FIM DO BLOCO: MOTOR DE BOAS-VINDAS] ---
 
