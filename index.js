@@ -1621,7 +1621,7 @@ bot.on('new_chat_members', async (ctx) => {
   let finalMsg = (welcome.text || "");
   let finalEntities = welcome.entities ? JSON.parse(JSON.stringify(welcome.entities)) : [];
 
-  // RECALCULO DE DNA PARA EMOJIS PREMIUM E TAGS
+  // RECALCULO AUTOMÁTICO DE DNA (EMOJIS PREMIUM)
   Object.keys(tags).forEach(tag => {
     const replacement = String(tags[tag]);
     while (finalMsg.includes(tag)) {
@@ -1636,33 +1636,31 @@ bot.on('new_chat_members', async (ctx) => {
     const body = {
       chat_id: gId,
       parse_mode: "HTML",
-      reply_markup: welcome.reply_markup || undefined // PRESERVA O TECLADO
+      reply_markup: welcome.reply_markup || undefined,
+      show_caption_above_media: true // A MÁGICA PARA A MÍDIA FICAR EMBAIXO
     };
 
     let endpoint = "sendMessage";
-
     if (!welcome.media || welcome.type === 'text') {
       endpoint = "sendMessage"; body.text = finalMsg; body.entities = finalEntities;
     } else if (['photo', 'video', 'animation'].includes(welcome.type)) {
-      // MÁGICA: MÍDIA EMBAIXO + LEGENDA EM CIMA
       body.caption = finalMsg; 
       body.caption_entities = finalEntities;
-      body.show_caption_above_media = true; 
-      if (welcome.type === 'photo') { endpoint = "sendPhoto"; body.photo = welcome.media; }
-      else if (welcome.type === 'video') { endpoint = "sendVideo"; body.video = welcome.media; }
-      else if (welcome.type === 'animation') { endpoint = "sendAnimation"; body.animation = welcome.media; }
+      if (welcome.type === 'photo') endpoint = "sendPhoto", body.photo = welcome.media;
+      else if (welcome.type === 'video') endpoint = "sendVideo", body.video = welcome.media;
+      else if (welcome.type === 'animation') endpoint = "sendAnimation", body.animation = welcome.media;
     } else {
-      // COMANDOS DE VOZ, ÁUDIO E STICKER (MANTÉM O COMANDÃO)
-      if (welcome.type === 'sticker') { endpoint = "sendSticker"; body.sticker = welcome.media; }
-      else if (welcome.type === 'voice') { endpoint = "sendVoice"; body.voice = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
-      else if (welcome.type === 'audio') { endpoint = "sendAudio"; body.audio = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
+      // SUPORTE PARA VOZ, ÁUDIO E STICKER
+      if (welcome.type === 'sticker') endpoint = "sendSticker", body.sticker = welcome.media;
+      else if (welcome.type === 'voice') endpoint = "sendVoice", body.voice = welcome.media, body.caption = finalMsg, body.caption_entities = finalEntities;
+      else if (welcome.type === 'audio') endpoint = "sendAudio", body.audio = welcome.media, body.caption = finalMsg, body.caption_entities = finalEntities;
     }
 
     const res = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endpoint}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
     const result = await res.json();
-    if (!result.ok) console.log("Erro no DNA/Teclado:", JSON.stringify(result));
+    if (!result.ok) console.log("Erro no Envio:", JSON.stringify(result));
   } catch (e) { console.log("Erro no welcome:", e.message); }
 });
 
