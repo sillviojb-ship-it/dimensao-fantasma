@@ -1587,7 +1587,7 @@ if (text.startsWith("/delmute")) {
   }
 });
 
-// --- [MOTOR DE BOAS-VINDAS SUPREMO: DNA COMPLETO + INVERSÃO] ---
+// --- [MOTOR DE BOAS-VINDAS: O PACTO FINAL] ---
 bot.on('new_chat_members', async (ctx) => {
   if (!redis) return;
   const gId = ctx.chat.id;
@@ -1602,25 +1602,20 @@ bot.on('new_chat_members', async (ctx) => {
 
   const u = ctx.from;
   const now = new Date();
-  const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
-
+  
   const tags = {
     '{ID}': u.id, '{id}': u.id,
     '{NAME}': u.first_name || "", '{name}': u.first_name || "",
-    '{FIRST}': u.first_name || "", '{first}': u.first_name || "",
-    '{SURNAME}': u.last_name || "", '{surname}': u.last_name || "",
-    '{NAMESURNAME}': fullName, '{namesurname}': fullName,
-    '{USERNAME}': u.username ? `@${u.username}` : "n/a", '{username}': u.username ? `@${u.username}` : "n/a",
-    '{MENTION}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`, '{mention}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`,
-    '{GROUPNAME}': ctx.chat.title || "", '{groupname}': ctx.chat.title || "",
-    '{DATE}': now.toLocaleDateString("pt-BR"), '{date}': now.toLocaleDateString("pt-BR"),
-    '{TIME}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), '{time}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-    '{WEEKDAY}': now.toLocaleDateString("pt-BR", { weekday: "long" }), '{weekday}': now.toLocaleDateString("pt-BR", { weekday: "long" })
+    '{MENTION}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`,
+    '{GROUPNAME}': ctx.chat.title || "",
+    '{DATE}': now.toLocaleDateString("pt-BR"),
+    '{TIME}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
   };
 
   let finalMsg = welcome.text || "";
   let finalEntities = welcome.entities ? JSON.parse(JSON.stringify(welcome.entities)) : [];
 
+  // Ajuste de DNA das Tags (Maiúsculas e Minúsculas)
   Object.keys(tags).forEach(tag => {
     const replacement = String(tags[tag]);
     while (finalMsg.includes(tag)) {
@@ -1631,29 +1626,29 @@ bot.on('new_chat_members', async (ctx) => {
     }
   });
 
-  // CORPO DA MENSAGEM - FORÇANDO A INVERSÃO (ESTILO CLOUDFLARE)
+  // A ESTRUTURA QUE O TELEGRAM NÃO CONSEGUE IGNORAR
   const body = {
     chat_id: gId,
     caption: finalMsg,
-    caption_entities: finalEntities,
+    caption_entities: finalEntities, // AQUI MORA O EMOJI PREMIUM
     parse_mode: 'HTML',
     reply_markup: welcome.reply_markup || undefined,
-    show_above_text: true,      // Comando oficial para texto em cima
-    invert_media: true,         // Reforço de inversão
-    expand_media_caption: true  // Mantém tudo unido
+    show_above_text: true,      // O TEXTO SOBE
+    invert_media: true,         // A MÍDIA DESCE
+    expand_media_caption: true 
   };
 
   let endpoint = "sendMessage";
   if (welcome.media) {
-    if (welcome.type === 'photo') { endpoint = "sendPhoto"; body.photo = welcome.media; }
-    else if (welcome.type === 'video') { endpoint = "sendVideo"; body.video = welcome.media; }
+    if (welcome.type === 'video') { endpoint = "sendVideo"; body.video = welcome.media; }
+    else if (welcome.type === 'photo') { endpoint = "sendPhoto"; body.photo = welcome.media; }
     else if (welcome.type === 'animation') { endpoint = "sendAnimation"; body.animation = welcome.media; }
   } else {
     delete body.caption; delete body.caption_entities;
     body.text = finalMsg; body.entities = finalEntities;
   }
 
-  // ENVIO DIRETO SEM PASSAR PELA BIBLIOTECA
+  // ENVIO DIRETO (O JEITO CLOUDFLARE NO RAILWAY)
   const https = require('https');
   const data = JSON.stringify(body);
   const options = {
@@ -1663,6 +1658,7 @@ bot.on('new_chat_members', async (ctx) => {
   };
 
   const req = https.request(options);
+  req.on('error', (e) => console.error("Erro no Ritual:", e));
   req.write(data);
   req.end();
 });
