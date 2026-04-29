@@ -1604,7 +1604,6 @@ bot.on('new_chat_members', async (ctx) => {
   const now = new Date();
   const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
 
-  // TODAS AS TAGS (MAIÚSCULAS E MINÚSCULAS)
   const tags = {
     '{ID}': u.id, '{id}': u.id,
     '{NAME}': u.first_name || "", '{name}': u.first_name || "",
@@ -1632,34 +1631,38 @@ bot.on('new_chat_members', async (ctx) => {
     }
   });
 
+  // CORPO DA MENSAGEM - FORÇANDO A INVERSÃO (ESTILO CLOUDFLARE)
   const body = {
     chat_id: gId,
+    caption: finalMsg,
+    caption_entities: finalEntities,
+    parse_mode: 'HTML',
     reply_markup: welcome.reply_markup || undefined,
-    show_above_text: true, 
-    expand_media_caption: true
+    show_above_text: true,      // Comando oficial para texto em cima
+    invert_media: true,         // Reforço de inversão
+    expand_media_caption: true  // Mantém tudo unido
   };
 
   let endpoint = "sendMessage";
   if (welcome.media) {
-    if (welcome.type === 'photo') { endpoint = "sendPhoto"; body.photo = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
-    else if (welcome.type === 'video') { endpoint = "sendVideo"; body.video = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
-    else if (welcome.type === 'animation') { endpoint = "sendAnimation"; body.animation = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
-    else if (welcome.type === 'sticker') { endpoint = "sendSticker"; body.sticker = welcome.media; }
-    else if (welcome.type === 'audio') { endpoint = "sendAudio"; body.audio = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
-    else if (welcome.type === 'voice') { endpoint = "sendVoice"; body.voice = welcome.media; body.caption = finalMsg; body.caption_entities = finalEntities; }
+    if (welcome.type === 'photo') { endpoint = "sendPhoto"; body.photo = welcome.media; }
+    else if (welcome.type === 'video') { endpoint = "sendVideo"; body.video = welcome.media; }
+    else if (welcome.type === 'animation') { endpoint = "sendAnimation"; body.animation = welcome.media; }
   } else {
+    delete body.caption; delete body.caption_entities;
     body.text = finalMsg; body.entities = finalEntities;
   }
 
+  // ENVIO DIRETO SEM PASSAR PELA BIBLIOTECA
   const https = require('https');
   const data = JSON.stringify(body);
   const options = {
-    hostname: 'api.telegram.org', port: 443, path: `/bot${process.env.BOT_TOKEN}/${endpoint}`,
+    hostname: 'api.telegram.org', port: 443,
+    path: `/bot${process.env.BOT_TOKEN}/${endpoint}`,
     method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) }
   };
 
   const req = https.request(options);
-  req.on('error', (e) => console.error("Erro no ritual:", e));
   req.write(data);
   req.end();
 });
