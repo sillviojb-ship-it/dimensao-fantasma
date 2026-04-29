@@ -1,7 +1,7 @@
 {
   "name": "ceifador-fantasma-2",
   "version": "1.0.0",
-  "description": "Bot Ceifador no Railway",
+  "description": "Bot no Railway",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
