@@ -1587,7 +1587,7 @@ if (text.startsWith("/delmute")) {
   }
 });
 
-// --- MOTOR DE BOAS-VINDAS ---
+// --- MOTOR DE BOAS-VINDAS (DNA SUPREMO + MÍDIA EMBAIXO) ---
 bot.on('new_chat_members', async (ctx) => {
   if (!redis) return;
   const gId = ctx.chat.id;
@@ -1597,21 +1597,20 @@ bot.on('new_chat_members', async (ctx) => {
 
   let welcome;
   try {
-    const chosen = list[Math.floor(Math.random() * list.length)];
-    welcome = JSON.parse(chosen);
+    welcome = JSON.parse(list[Math.floor(Math.random() * list.length)]);
   } catch (e) { return; }
 
   const u = ctx.from;
   const now = new Date();
   const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
-  const mention = `<a href='tg://user?id=${u.id}'><b>${u.first_name}</b></a>`;
   const tags = {
     '{ID}': u.id, '{id}': u.id,
     '{NAME}': u.first_name || "", '{name}': u.first_name || "",
+    '{FIRST}': u.first_name || "", '{first}': u.first_name || "",
     '{SURNAME}': u.last_name || "", '{surname}': u.last_name || "",
     '{NAMESURNAME}': fullName, '{namesurname}': fullName,
     '{USERNAME}': u.username ? `@${u.username}` : "n/a", '{username}': u.username ? `@${u.username}` : "n/a",
-    '{MENTION}': mention, '{mention}': mention,
+    '{MENTION}': `<a href='tg://user?id=${u.id}'><b>${u.first_name}</b></a>`, '{mention}': `<a href='tg://user?id=${u.id}'><b>${u.first_name}</b></a>`,
     '{GROUPNAME}': ctx.chat.title || "", '{groupname}': ctx.chat.title || "",
     '{DATE}': now.toLocaleDateString("pt-BR"), '{date}': now.toLocaleDateString("pt-BR"),
     '{TIME}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), '{time}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
@@ -1619,43 +1618,42 @@ bot.on('new_chat_members', async (ctx) => {
   };
 
   let finalMsg = (welcome.text || "");
-  Object.keys(tags).forEach(tag => { finalMsg = finalMsg.split(tag).join(String(tags[tag])); });
+  let finalEntities = welcome.entities ? JSON.parse(JSON.stringify(welcome.entities)) : [];
+
+  // RECALCULO DE DNA PARA EMOJIS PREMIUM (NÃO MEXA AQUI)
+  Object.keys(tags).forEach(tag => {
+    const replacement = String(tags[tag]);
+    while (finalMsg.includes(tag)) {
+      const index = finalMsg.indexOf(tag);
+      const diff = replacement.length - tag.length;
+      finalEntities.forEach(ent => { if (ent.offset > index) ent.offset += diff; });
+      finalMsg = finalMsg.replace(tag, replacement);
+    }
+  });
 
   try {
-    const entities = welcome.entities && welcome.entities.length > 0 ? welcome.entities : undefined;
-    const baseBody = {
+    const body = {
       chat_id: gId,
       parse_mode: "HTML",
-      reply_markup: welcome.reply_markup || undefined
+      reply_markup: welcome.reply_markup || undefined,
+      show_caption_above_media: true // MÁGICA DA MÍDIA EMBAIXO
     };
 
-    let endpoint;
-    let body;
-
+    let endpoint = "sendMessage";
     if (!welcome.media || welcome.type === 'text') {
-      endpoint = "sendMessage";
-      body = { ...baseBody, text: finalMsg, entities };
-    } else if (welcome.type === 'photo') {
-      endpoint = "sendPhoto";
-      body = { ...baseBody, photo: welcome.media, caption: finalMsg, caption_entities: entities, show_caption_above_media: true };
-    } else if (welcome.type === 'video') {
-      endpoint = "sendVideo";
-      body = { ...baseBody, video: welcome.media, caption: finalMsg, caption_entities: entities, show_caption_above_media: true };
-    } else if (welcome.type === 'animation') {
-      endpoint = "sendAnimation";
-      body = { ...baseBody, animation: welcome.media, caption: finalMsg, caption_entities: entities, show_caption_above_media: true };
+      endpoint = "sendMessage"; body.text = finalMsg; body.entities = finalEntities;
     } else {
-      endpoint = "sendMessage";
-      body = { ...baseBody, text: finalMsg, entities };
+      body.caption = finalMsg; body.caption_entities = finalEntities;
+      if (welcome.type === 'photo') { endpoint = "sendPhoto"; body.photo = welcome.media; }
+      else if (welcome.type === 'video') { endpoint = "sendVideo"; body.video = welcome.media; }
+      else if (welcome.type === 'animation') { endpoint = "sendAnimation"; body.animation = welcome.media; }
     }
 
     const res = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endpoint}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
     const result = await res.json();
-    if (!result.ok) console.log("Erro no welcome:", JSON.stringify(result));
+    if (!result.ok) console.log("Erro no DNA do welcome:", JSON.stringify(result));
   } catch (e) { console.log("Erro no welcome:", e.message); }
 });
 
