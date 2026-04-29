@@ -1596,14 +1596,13 @@ bot.on('new_chat_members', async (ctx) => {
   if (!list || list.length === 0) return;
 
   let welcome;
-  try {
-    welcome = JSON.parse(list[Math.floor(Math.random() * list.length)]);
-  } catch (e) { return; }
+  try { welcome = JSON.parse(list[Math.floor(Math.random() * list.length)]); } catch (e) { return; }
 
   const u = ctx.from;
   const now = new Date();
   const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
   
+  // TODAS AS TAGS (MAIÚSCULAS E MINÚSCULAS)
   const tags = {
     '{ID}': u.id, '{id}': u.id,
     '{NAME}': u.first_name || "", '{name}': u.first_name || "",
@@ -1621,7 +1620,7 @@ bot.on('new_chat_members', async (ctx) => {
   let finalMsg = (welcome.text || "");
   let finalEntities = welcome.entities ? JSON.parse(JSON.stringify(welcome.entities)) : [];
 
-  // RECALCULO AUTOMÁTICO DE DNA (EMOJIS PREMIUM)
+  // RECALCULO DE DNA PARA EMOJIS PREMIUM
   Object.keys(tags).forEach(tag => {
     const replacement = String(tags[tag]);
     while (finalMsg.includes(tag)) {
@@ -1632,35 +1631,38 @@ bot.on('new_chat_members', async (ctx) => {
     }
   });
 
+  // LIMPEZA PARA EMOJI PREMIUM FUNCIONAR NO FETCH
+  const cleanedEntities = finalEntities.map(ent => {
+    const { user, ...rest } = ent; 
+    return rest;
+  });
+
   try {
     const body = {
       chat_id: gId,
       parse_mode: "HTML",
-      reply_markup: welcome.reply_markup || undefined,
-      show_caption_above_media: true // A MÁGICA PARA A MÍDIA FICAR EMBAIXO
+      reply_markup: welcome.reply_markup || undefined, // BOTÕES COLORIDOS AQUI
+      show_caption_above_media: true // MÍDIA EMBAIXO
     };
 
     let endpoint = "sendMessage";
     if (!welcome.media || welcome.type === 'text') {
-      endpoint = "sendMessage"; body.text = finalMsg; body.entities = finalEntities;
+      endpoint = "sendMessage"; body.text = finalMsg; body.entities = cleanedEntities;
     } else if (['photo', 'video', 'animation'].includes(welcome.type)) {
-      body.caption = finalMsg; 
-      body.caption_entities = finalEntities;
+      body.caption = finalMsg; body.caption_entities = cleanedEntities;
       if (welcome.type === 'photo') endpoint = "sendPhoto", body.photo = welcome.media;
       else if (welcome.type === 'video') endpoint = "sendVideo", body.video = welcome.media;
       else if (welcome.type === 'animation') endpoint = "sendAnimation", body.animation = welcome.media;
     } else {
-      // SUPORTE PARA VOZ, ÁUDIO E STICKER
+      // TODAS AS OUTRAS MÍDIAS (VOZ, ÁUDIO, STICKER)
       if (welcome.type === 'sticker') endpoint = "sendSticker", body.sticker = welcome.media;
-      else if (welcome.type === 'voice') endpoint = "sendVoice", body.voice = welcome.media, body.caption = finalMsg, body.caption_entities = finalEntities;
-      else if (welcome.type === 'audio') endpoint = "sendAudio", body.audio = welcome.media, body.caption = finalMsg, body.caption_entities = finalEntities;
+      else if (welcome.type === 'voice') endpoint = "sendVoice", body.voice = welcome.media, body.caption = finalMsg, body.caption_entities = cleanedEntities;
+      else if (welcome.type === 'audio') endpoint = "sendAudio", body.audio = welcome.media, body.caption = finalMsg, body.caption_entities = cleanedEntities;
     }
 
-    const res = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endpoint}`, {
+    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endpoint}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
-    const result = await res.json();
-    if (!result.ok) console.log("Erro no Envio:", JSON.stringify(result));
   } catch (e) { console.log("Erro no welcome:", e.message); }
 });
 
