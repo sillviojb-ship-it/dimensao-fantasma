@@ -1,0 +1,13 @@
+{
+  "name": "ceifador-fantasma-2",
+  "version": "1.0.0",
+  "description": "Bot Ceifador no Railway",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "ioredis": "^5.4.1"
+  }
+}
