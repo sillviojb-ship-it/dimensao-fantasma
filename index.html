@@ -1,320 +1,112 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dimensão Fantasma – Ritual Ceifador</title>
-  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&display=swap" rel="stylesheet">
-  <style>
-    :root { --sangue: #8b0000; --sangue-escuro: #4b0000; --texto: #ffcccc; }
-    body {
-      background: #000 url('https://images.unsplash.com/photo-1507499739999-097706ad8914?auto=format&fit=crop&q=80') center/cover fixed;
-      color: var(--texto);
-      font-family: 'Special Elite', cursive;
-      margin: 0; padding: 0;
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
+const { Telegraf } = require('telegraf');
+const https = require('https');
+
+// --- INICIALIZAÇÃO DO REDIS ---
+let redis = null;
+try {
+  const Redis = require('ioredis');
+  if (process.env.REDIS_URL) {
+    redis = new Redis(process.env.REDIS_URL);
+    redis.on("connect", () => console.log("Redis Conectado ✅"));
+  }
+} catch (e) { console.log("Erro Redis:", e.message); }
+
+const bot = new Telegraf(process.env.BOT_TOKEN);
+const c = "<tg-emoji emoji-id='4916220696025106096'>💀</tg-emoji>";
+
+// --- VERIFICAÇÃO DE ADMIN ---
+const isAdmin = async (ctx) => {
+  try {
+    const m = await ctx.telegram.getChatMember(ctx.chat.id, ctx.from.id);
+    return ["creator", "administrator"].includes(m.status);
+  } catch { return false; }
+};
+
+// --- MOTOR DE ENVIO DIRETO (O SEGREDO DA MÍDIA EMBAIXO) ---
+const sendDirect = async (chatId, method, payload) => {
+  const data = JSON.stringify({ 
+    chat_id: chatId, 
+    ...payload, 
+    show_caption_above_media: true,
+    expand_media_caption: true 
+  });
+
+  const options = {
+    hostname: 'api.telegram.org',
+    port: 443,
+    path: `/bot${process.env.BOT_TOKEN}/${method}`,
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(data)
     }
-    body::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(rgba(0,0,0,0.7), rgba(139,0,0,0.3));
-      pointer-events: none;
-      animation: pulse 12s infinite alternate;
-    }
-    @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 0.8; } }
+  };
 
-    .container {
-      position: relative;
-      z-index: 2;
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 1rem;
-      text-align: center;
-    }
+  const req = https.request(options, (res) => {
+    res.on('data', () => {}); // Consome a resposta
+  });
+  req.on('error', (e) => console.error("Erro no envio direto:", e));
+  req.write(data);
+  req.end();
+};
 
-    h1 {
-      font-family: 'Creepster', cursive;
-      font-size: clamp(3.5rem, 12vw, 6rem);
-      color: var(--sangue);
-      text-shadow: 0 0 20px var(--sangue-escuro);
-      margin: 1rem 0;
-      animation: glitch 5s infinite;
-    }
-    @keyframes glitch {
-      0%,100% { transform: translate(0); }
-      20% { transform: translate(-3px, 3px); }
-      40% { transform: translate(3px, -3px); }
-    }
+// --- COMANDO /SAY (MANIFESTAÇÃO DO CEIFADOR) ---
+bot.on(['text', 'caption', 'photo', 'video', 'animation'], async (ctx) => {
+  const m = ctx.message;
+  if (!m || m.from?.is_bot) return;
 
-    input, select, button {
-      width: 100%;
-      padding: 1rem;
-      margin: 0.8rem 0;
-      font-size: 1.2rem;
-      background: rgba(30,0,0,0.8);
-      border: 2px solid var(--sangue);
-      color: var(--texto);
-      border-radius: 8px;
-      font-family: inherit;
-    }
-    button {
-      background: linear-gradient(45deg, var(--sangue-escuro), var(--sangue));
-      cursor: pointer;
-      border: none;
-    }
-    button:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--sangue); }
+  const txt = m.text || m.caption || "";
 
-    .option {
-      background: rgba(40,0,0,0.7);
-      padding: 1rem;
-      margin: 0.8rem 0;
-      border: 2px solid var(--sangue);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .option:hover { border-color: #ff4444; box-shadow: 0 0 15px #ff4444; }
+  if (txt.startsWith("/say") && (await isAdmin(ctx))) {
+    const space = txt.indexOf(' ');
+    const clean = txt.slice(space === -1 ? txt.length : space + 1);
+    
+    // Tags Dinâmicas
+    const u = m.reply_to_message ? m.reply_to_message.from : m.from;
+    let fTxt = clean.replace(/{ID}/g, u.id).replace(/{NAME}/g, u.first_name);
+    
+    // Preparação dos Botões (DNA Brutus/Rose)
+    let btns = [];
+    const lines = fTxt.split('\n');
+    lines.forEach(l => {
+      let row = [];
+      const reg = /\{\[(?:#(.) )?(.*?) - (.*?)\]\}/g;
+      let match;
+      while ((match = reg.exec(l)) !== null) {
+        row.push({ text: match[2].trim(), url: match[3].trim() });
+      }
+      if (row.length) btns.push(row);
+    });
 
-    /* BARRA DE SANGUE ESCORRENDO */
-    .timer-box {
-      width: 100%;
-      height: 30px;
-      background: #111;
-      border: 2px solid var(--sangue);
-      border-radius: 15px;
-      overflow: hidden;
-      margin: 1rem 0;
-      position: relative;
-    }
-    #timer-bar {
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, #300, var(--sangue), #800);
-      background-size: 200% 100%;
-      animation: bloodFlow 3s linear infinite;
-      transition: width 1s linear;
-    }
-    @keyframes bloodFlow {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 200% 50%; }
-    }
+    // Limpa o texto das chaves de botões
+    const finalTxt = fTxt.replace(/\{\[(.*?)\]\}/g, "").trim();
 
-    /* FEEDBACK */
-    .feedback {
-      font-size: 1.5rem;
-      margin: 1rem 0;
-      font-weight: bold;
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
-    .certo { color: #00ff44; text-shadow: 0 0 10px #00ff44; animation: glow 1s infinite alternate; }
-    .errado { color: #ff4444; text-shadow: 0 0 10px #ff4444; animation: shake 0.5s; }
-
-    @keyframes glow { from { opacity: 0.6; } to { opacity: 1; } }
-    @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-
-    #ranking-container, #quiz-container, #balloon { display: none; }
-    #balloon {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.98);
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #mute-btn {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: none;
-      border: none;
-      color: #ffcccc;
-      font-size: 2rem;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <button id="mute-btn" onclick="toggleMute()">🔊</button>
-
-  <div class="container" id="setup">
-    <h1>Dimensão Fantasma</h1>
-    <input type="text" id="nome" placeholder="Nome (opcional para ranking)" maxlength="30">
-    <select id="tema">
-      <option value="terror">Terror Clássico</option>
-      <option value="invocacao">Invocação do Mal</option>
-      <option value="lendas">Lendas Urbanas</option>
-    </select>
-    <select id="qtd">
-      <option value="5">5 perguntas</option>
-      <option value="10" selected>10 perguntas</option>
-      <option value="15">15 perguntas</option>
-    </select>
-    <button onclick="startQuiz()">INICIAR RITUAL</button>
-  </div>
-
-  <div class="container" id="quiz-container">
-    <div class="timer-box"><div id="timer-bar"></div></div>
-    <div id="pergunta" style="font-size:1.4rem; margin:1rem 0;"></div>
-    <div id="opcoes"></div>
-    <div id="feedback" class="feedback"></div>
-  </div>
-
-  <div class="container" id="ranking-container">
-    <h2>Ritual Concluído</h2>
-    <div id="resultado"></div>
-    <div id="ranking"></div>
-    <button onclick="shareResult()">Compartilhar (WhatsApp, X, FB...)</button>
-    <a href="https://t.me/share/url?url=" id="telegram-share" class="btn-s">Compartilhar no Telegram</a>
-    <button onclick="location.reload()">Tentar Novamente</button>
-  </div>
-
-  <div id="balloon">
-    <h2 style="color:red;">A ENTIDADE TE PEGOU!</h2>
-    <button onclick="location.reload()">Tentar Novamente</button>
-  </div>
-
-  <script>
-    const sons = {
-      bg: new Audio("https://freesound.org/data/previews/243/243020_1774763-lq.mp3"),
-      correct: new Audio("https://freesound.org/data/previews/387/387182_7253554-lq.mp3"),
-      wrong: new Audio("https://freesound.org/data/previews/387/387181_7253554-lq.mp3"),
-      timeup: new Audio("https://freesound.org/data/previews/269/269026_5094889-lq.mp3")
-    };
-    sons.bg.loop = true;
-
-    let muted = false;
-    function toggleMute() {
-      muted = !muted;
-      document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
-      if (muted) sons.bg.pause(); else sons.bg.play().catch(() => {});
-    }
-
-    // Desbloqueio de áudio no primeiro toque/clique
-    document.body.addEventListener('touchstart', () => {
-      sons.bg.play().catch(() => {});
-    }, { once: true });
-
-    const banco = {
-      terror: [
-        { q: "Quem é o vilão de Halloween?", o: ["Freddy Krueger", "Jason Voorhees", "Michael Myers", "Chucky"], c: 2 },
-        { q: "Nome da boneca maldita?", o: ["Chucky", "Annabelle", "Tiffany", "Samara"], c: 1 },
-        { q: "Demônio de O Exorcista?", o: ["Pazuzu", "Valak", "Bughuul", "Asmodeus"], c: 0 }
-        // Adicione mais perguntas conforme quiser
-      ],
-      invocacao: [
-        { q: "Qual filme faz parte do universo Invocação do Mal?", o: ["Jogos Mortais", "Annabelle", "O Iluminado", "A Bruxa"], c: 1 }
-        // Adicione mais
-      ],
-      lendas: [
-        { q: "Qual é uma lenda urbana famosa?", o: ["Loira do Banheiro", "Alienígena", "Drácula", "Kraken"], c: 0 }
-        // Adicione mais
-      ]
+    let method = "sendMessage";
+    let payload = { 
+      text: finalTxt, 
+      parse_mode: 'HTML', 
+      entities: m.entities || m.caption_entities,
+      reply_markup: btns.length ? { inline_keyboard: btns } : undefined
     };
 
-    let perguntas = [], atual = 0, pontos = 0, tempo = 15, timerInterval = null, nome = "";
-
-    function startQuiz() {
-      nome = document.getElementById('nome').value.trim() || "Alma Perdida";
-      const tema = document.getElementById('tema').value;
-      const qtd = parseInt(document.getElementById('qtd').value);
-
-      perguntas = banco[tema] || [];
-      perguntas = perguntas.sort(() => Math.random() - 0.5).slice(0, qtd);
-
-      if (perguntas.length === 0) return alert("Sem perguntas nesse tema!");
-
-      document.getElementById('setup').style.display = 'none';
-      document.getElementById('quiz-container').style.display = 'block';
-      sons.bg.play().catch(() => {});
-      showQuestion();
+    if (m.photo) {
+      method = "sendPhoto";
+      payload = { photo: m.photo[m.photo.length - 1].file_id, caption: finalTxt, caption_entities: payload.entities };
+    } else if (m.video || m.animation) {
+      method = m.video ? "sendVideo" : "sendAnimation";
+      payload = { [m.video ? "video" : "animation"]: (m.video || m.animation).file_id, caption: finalTxt, caption_entities: payload.entities };
     }
 
-    function showQuestion() {
-      if (atual >= perguntas.length) return endQuiz();
+    await sendDirect(ctx.chat.id, method, payload);
+    await ctx.deleteMessage().catch(() => {});
+  }
+});
 
-      let rest = tempo;
-      document.getElementById('timer-bar').style.width = '100%';
-      clearInterval(timerInterval);
-      timerInterval = setInterval(() => {
-        rest--;
-        document.getElementById('timer-bar').style.width = (rest / tempo * 100) + '%';
-        if (rest <= 0) {
-          clearInterval(timerInterval);
-          sons.timeup.play().catch(() => {});
-          document.getElementById('feedback').innerText = "⏰ TEMPO ESGOTADO!";
-          document.getElementById('feedback').className = 'feedback errado';
-          setTimeout(nextQuestion, 1500);
-        }
-      }, 1000);
+// START
+bot.command('start', (ctx) => {
+    ctx.reply(`${c} <b>CEIFADOR FANTASMA 2 ATIVADO!</b>\n\nPronto para governar o território.`, { parse_mode: 'HTML' });
+});
 
-      const q = perguntas[atual];
-      document.getElementById('pergunta').innerText = q.q;
-      const ops = document.getElementById('opcoes');
-      ops.innerHTML = '';
-      q.o.forEach((op, i) => {
-        const btn = document.createElement('div');
-        btn.className = 'option';
-        btn.innerText = op;
-        btn.onclick = () => {
-          clearInterval(timerInterval);
-          if (i === q.c) {
-            pontos++;
-            sons.correct.play().catch(() => {});
-            document.getElementById('feedback').innerText = "✔ ACERTOU!";
-            document.getElementById('feedback').className = 'feedback certo';
-          } else {
-            sons.wrong.play().catch(() => {});
-            document.getElementById('feedback').innerText = "✖ ERROU!";
-            document.getElementById('feedback').className = 'feedback errado';
-          }
-          setTimeout(nextQuestion, 1500);
-        };
-        ops.appendChild(btn);
-      });
-    }
-
-    function nextQuestion() {
-      atual++;
-      document.getElementById('feedback').innerText = '';
-      showQuestion();
-    }
-
-    function endQuiz() {
-      clearInterval(timerInterval);
-      sons.bg.pause();
-      document.getElementById('quiz-container').style.display = 'none';
-      document.getElementById('ranking-container').style.display = 'block';
-
-      let txt = `Alma: ${nome}\nAcertos: \( {pontos}/ \){perguntas.length}\nRitual Concluído! 💀`;
-      document.getElementById('bloco-resultado').innerText = txt;
-
-      // Ranking local
-      let ranking = JSON.parse(localStorage.getItem('ritualRanking') || '[]');
-      ranking.push({ nome, pontos, total: perguntas.length });
-      ranking.sort((a, b) => b.pontos - a.pontos);
-      ranking = ranking.slice(0, 10);
-      localStorage.setItem('ritualRanking', JSON.stringify(ranking));
-
-      let html = '<h3>Hall das Almas Ceifadas</h3><ol>';
-      ranking.forEach((r, i) => html += `<li>${i+1}º - \( {r.nome} ( \){r.pontos}/${r.total})</li>`);
-      html += '</ol>';
-      document.getElementById('ranking').innerHTML = html;
-
-      // Compartilhar Telegram
-      document.getElementById('telegram-share').href = `https://t.me/share/url?url=${encodeURIComponent(txt)}`;
-    }
-
-    document.getElementById('btn-copiar').onclick = () => {
-      navigator.clipboard.writeText(document.getElementById('bloco-resultado').innerText);
-      alert("Resultado copiado!");
-    };
-  </script>
-</body>
-</html>
+bot.launch().then(() => console.log("O Ceifador despertou no Railway!"));
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
