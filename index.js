@@ -303,214 +303,131 @@ if (data === "back_start") {
     });
   }
 
-  // --- [RITUAL] CONSTRUTOR DINÂMICO DIMENSÃO FANTASMA ---
-  if (data.startsWith("w_ritual_")) {
-    const gId = data.replace("w_ritual_", "");
-    const draft = await redis.hgetall(`w_temp:${ctx.from.id}`) || {};
-    const txtStat = draft.text ? "✅ (Definido)" : "❌ (Vazio)";
-    const medStat = draft.media ? "✅ (Definida)" : "❌ (Vazia)";
-    const btnStat = draft.buttons ? "✅ (Definidos)" : "❌ (Vazio)";
-    await ctx.editMessageText(`${c} <b>CONSTRUTOR DE RECEPÇÃO</b>\n\n📜 <b>O Verbo:</b> ${txtStat}\n👁️ <b>A Visão:</b> ${medStat}\n⛓️ <b>As Correntes:</b> ${btnStat}\n\n<i>Selecione o que deseja moldar:</i>`, { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "📝 Definir Texto", callback_data: `w_edit_txt_${gId}` }], [{ text: "🖼️ Definir Mídia", callback_data: `w_edit_med_${gId}` }], [{ text: "🔘 Definir Botões", callback_data: `w_edit_btn_${gId}` }], [{ text: "🔥 SELAR PACTO (Salvar)", callback_data: `w_save_ritual_${gId}` }], [{ text: "❌ Interromper", callback_data: `cfg_welcome_${gId}` }]] } });
-  }
+  // =========================================================
+// --- [RITUAL] CONSTRUTOR DINÂMICO DIMENSÃO FANTASMA ---
+// =========================================================
+if (data.startsWith("w_ritual_")) {
+  const gId = data.replace("w_ritual_", "");
+  const draft = await redis.hgetall(`w_temp:${ctx.from.id}`) || {};
+  
+  // Aqui está o segredo: nomes batendo com o que você digita
+  const txtStat = draft.text ? "✅ (Definido)" : "❌ (Vazio)";
+  const medStat = draft.media ? "✅ (Definida)" : "❌ (Vazia)";
+  const btnStat = draft.buttons ? "✅ (Definidos)" : "❌ (Vazio)";
+  
+  await ctx.editMessageText(`${c} <b>CONSTRUTOR DE RECEPÇÃO</b>\n\n📜 <b>O Verbo:</b> ${txtStat}\n👁️ <b>A Visão:</b> ${medStat}\n⛓️ <b>As Correntes:</b> ${btnStat}\n\n<i>Selecione o que deseja moldar:</i>`, { 
+    parse_mode: "HTML", 
+    reply_markup: { 
+      inline_keyboard: [
+        [{ text: "📝 Definir Texto", callback_data: `w_edit_txt_${gId}` }], 
+        [{ text: "🖼️ Definir Mídia", callback_data: `w_edit_med_${gId}` }], 
+        [{ text: "🔘 Definir Botões", callback_data: `w_edit_btn_${gId}` }], 
+        [{ text: "🔥 SELAR PACTO (Salvar)", callback_data: `w_save_ritual_${gId}` }], 
+        [{ text: "❌ Interromper", callback_data: `cfg_welcome_${gId}` }]
+      ] 
+    } 
+  });
+}
 
-  if (data.startsWith("w_edit_")) {
-    const [,, type, gId] = data.split("_");
-    await redis.set(`w_step:${ctx.from.id}`, `${type}:${gId}`);
-    const msgs = { txt: "o <b>TEXTO</b>", med: "a <b>MÍDIA</b> (Foto, Vídeo ou GIF)", btn: "a estrutura dos <b>BOTÕES</b>" };
-    await ctx.editMessageText(`${c} Envie agora ${msgs[type]} da recepção.\n\n<i>O Ceifador aguarda seu comando...</i>`, { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "⬅️ Voltar", callback_data: `w_ritual_${gId}` }]] } });
-  }
+if (data.startsWith("w_edit_")) {
+  const [,, type, gId] = data.split("_");
+  await redis.set(`w_step:${ctx.from.id}`, `${type}:${gId}`);
+  const msgs = { txt: "o <b>TEXTO</b>", med: "a <b>MÍDIA</b> (Foto, Vídeo ou GIF)", btn: "a estrutura dos <b>BOTÕES</b>" };
+  await ctx.editMessageText(`${c} Envie agora ${msgs[type]} da recepção.\n\n<i>O Ceifador aguarda seu comando...</i>`, { 
+    parse_mode: "HTML", 
+    reply_markup: { inline_keyboard: [[{ text: "⬅️ Voltar", callback_data: `w_ritual_${gId}` }]] } 
+  });
+}
 
-  if (data.startsWith("w_save_ritual_")) {
-    const gId = data.replace("w_save_ritual_", "");
-    const d = await redis.hgetall(`w_temp:${ctx.from.id}`);
-    if (!d.text) return ctx.answerCbQuery("⚠️ O Verbo (Texto) é obrigatório!");
-    const v = { text: d.text, media: d.media || null, type: d.type || 'text', entities: JSON.parse(d.entities || "[]"), reply_markup: d.buttons ? { inline_keyboard: JSON.parse(d.buttons) } : undefined, show_above_text: true };
-    await redis.sadd(`w_list:${gId}`, JSON.stringify(v));
-    await redis.del(`w_step:${ctx.from.id}`, `w_temp:${ctx.from.id}`);
-    await ctx.answerCbQuery("Pacto selado com sucesso!");
-    await ctx.editMessageText(`${c} <b>RITUAL CONCLUÍDO!</b>`, { parse_mode: "HTML", reply_markup: { inline_keyboard: [[{ text: "🏠 Voltar", callback_data: `cfg_welcome_${gId}` }]] } });
-  }
+if (data.startsWith("w_save_ritual_")) {
+  const gId = data.replace("w_save_ritual_", "");
+  const d = await redis.hgetall(`w_temp:${ctx.from.id}`);
+  if (!d.text) return ctx.answerCbQuery("⚠️ O Verbo (Texto) é obrigatório!");
 
+  const v = { 
+    text: d.text, 
+    media: d.media || null, 
+    type: d.type || 'text', 
+    entities: JSON.parse(d.entities || "[]"), 
+    reply_markup: d.buttons ? { inline_keyboard: JSON.parse(d.buttons) } : undefined,
+    show_caption_above_media: true // MÍDIA SEMPRE EMBAIXO
+  };
+
+  await redis.sadd(`w_list:${gId}`, JSON.stringify(v));
+  await redis.del(`w_step:${ctx.from.id}`);
+  await redis.del(`w_temp:${ctx.from.id}`);
+  
+  await ctx.answerCbQuery("Pacto selado com sucesso!");
+  await ctx.editMessageText(`${c} <b>RITUAL CONCLUÍDO!</b>`, { 
+    parse_mode: "HTML", 
+    reply_markup: { inline_keyboard: [[{ text: "🏠 Voltar", callback_data: `cfg_welcome_${gId}` }]] } 
+  });
+}
+
+// --- [SISTEMA DE VISUALIZAÇÃO DIMENSÃO FANTASMA] ---
 if (data.startsWith("w_view_")) {
   const gId = data.replace("w_view_", "");
-
   try {
     const list = await redis.smembers(`w_list:${gId}`);
-
-    if (!list || list.length === 0) {
-      return ctx.answerCbQuery("⚠️ Nenhuma mensagem cadastrada.");
-    }
-
-    let msg = `${c} <b>VISUALIZAÇÃO DAS BOAS-VINDAS</b>\n\n`;
-    msg += `<i>Total de registros: ${list.length}</i>\n\n`;
-
+    if (!list || list.length === 0) return ctx.answerCbQuery("⚠️ Nenhuma mensagem cadastrada.");
+    let msg = `${c} <b>VISUALIZAÇÃO DAS BOAS-VINDAS</b>\n\n<i>Total de registros: ${list.length}</i>\n\n`;
     const buttons = [];
-
     list.forEach((item, i) => {
       try {
-        const data = JSON.parse(item);
-        const preview = (data.text || "(sem texto)").substring(0, 40);
-
-        msg += `#${i + 1} → ${preview}\n`;
-
-        buttons.push([
-          {
-            text: `👁️ Ver #${i + 1}`,
-            callback_data: `w_show_${gId}_${i}`
-          }
-        ]);
-
+        const d = JSON.parse(item);
+        msg += `#${i + 1} → ${(d.text || "").substring(0, 30)}...\n`;
+        buttons.push([{ text: `👁️ Ver #${i + 1}`, callback_data: `w_show_${gId}_${i}` }]);
       } catch (err) {}
     });
-
     buttons.push([{ text: "⬅️ Voltar", callback_data: `cfg_welcome_${gId}` }]);
-
-    await ctx.editMessageText(msg, {
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: buttons
-      }
-    });
-
-  } catch (e) {
-    console.log("Erro no w_view:", e.message);
-    await ctx.answerCbQuery("❌ Erro ao carregar.");
-  }
+    await ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: { inline_keyboard: buttons } });
+  } catch (e) { await ctx.answerCbQuery("❌ Erro ao carregar."); }
 }
 
 if (data.startsWith("w_show_")) {
-  const parts = data.split("_");
-  const gId = parts[2];
-  const index = parseInt(parts[3]);
-
+  const [, , gId, index] = data.split("_");
   try {
     const list = await redis.smembers(`w_list:${gId}`);
+    const item = JSON.parse(list[parseInt(index)]);
 
-    if (!list || !list[index]) {
-      return ctx.answerCbQuery("Mensagem não encontrada.");
-    }
-
-    const item = JSON.parse(list[index]);
-
-    const opt = {
-      caption: item.text,
-      parse_mode: "HTML",
-      caption_entities: item.entities || undefined,
+    // Prévia real usando Fetch para garantir o layout correto
+    const body = {
+      chat_id: ctx.chat.id,
       reply_markup: item.reply_markup || undefined,
-      show_above_text: true
+      show_caption_above_media: true
     };
 
-    if (item.type === "photo") {
-      await ctx.replyWithPhoto(item.media, opt);
-    } else if (item.type === "video") {
-      await ctx.telegram.sendVideo(ctx.chat.id, item.media, opt);
-    } else if (item.type === "animation") {
-      await ctx.replyWithAnimation(item.media, opt);
+    let endpoint = "sendMessage";
+    if (!item.media || item.type === 'text') {
+      body.text = item.text; body.entities = item.entities;
     } else {
-      await ctx.reply(item.text, {
-        parse_mode: "HTML",
-        entities: item.entities || undefined,
-        reply_markup: item.reply_markup || undefined
-      });
+      body.caption = item.text; body.caption_entities = item.entities;
+      if (item.type === 'photo') endpoint = "sendPhoto", body.photo = item.media;
+      else if (item.type === 'video') endpoint = "sendVideo", body.video = item.media;
+      else if (item.type === 'animation') endpoint = "sendAnimation", body.animation = item.media;
     }
 
-    const chat = await ctx.telegram.getChat(gId).catch(() => null);
-const groupName = chat?.title || "Desconhecido";
+    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endpoint}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+    });
 
-await ctx.reply(
-`<b>PRÉ-VISUALIZAÇÃO REAL</b>
-
-🏠 Grupo: <b>${groupName}</b>
-📦 Registro: #${index + 1}
-
-<i>Abaixo está exatamente como será enviado:</i>`,
-{ parse_mode: "HTML" }
-);
-await ctx.reply(
-"🎛️ <b>Controle da visualização</b>",
-{
-  parse_mode: "HTML",
-  reply_markup: {
-    inline_keyboard: [
-      [{ text: "👁️ Atualizar", callback_data: `w_show_${gId}_${index}` }],
-      [
-        { text: "⬅️ Voltar", callback_data: `w_view_${gId}` },
-        { text: "🗑️ Deletar", callback_data: `w_del_${gId}_${index}` }
-      ]
-    ]
-  }
-});
-
-  } catch (e) {
-  console.log("Erro no w_show:", e.message);
-  await ctx.answerCbQuery("❌ Erro ao visualizar.");
-}
+    await ctx.reply(`<b>PRÉ-VISUALIZAÇÃO REAL #${parseInt(index)+1}</b>`, { 
+      parse_mode: "HTML",
+      reply_markup: { inline_keyboard: [[{ text: "⬅️ Voltar", callback_data: `w_view_${gId}` }, { text: "🗑️ Deletar", callback_data: `w_del_${gId}_${index}` }]] }
+    });
+  } catch (e) { await ctx.answerCbQuery("❌ Erro ao visualizar."); }
 }
 
 if (data.startsWith("w_del_")) {
-  const parts = data.split("_");
-  const gId = parts[2];
-  const index = parseInt(parts[3]);
-
+  const [, , gId, index] = data.split("_");
   try {
     const list = await redis.smembers(`w_list:${gId}`);
-
-    if (!list || !list[index]) {
-      return ctx.answerCbQuery("❌ Registro não encontrado.");
-    }
-
-    const item = list[index];
-
-    await redis.srem(`w_list:${gId}`, item);
-
-    await ctx.answerCbQuery("🗑️ Registro deletado.");
-
-    const updatedList = await redis.smembers(`w_list:${gId}`);
-
-    if (!updatedList || updatedList.length === 0) {
-      return ctx.editMessageText(`${c} ⚠️ Nenhuma mensagem cadastrada.`, {
-        parse_mode: "HTML"
-      });
-    }
-
-    let msg = `${c} <b>VISUALIZAÇÃO DAS BOAS-VINDAS</b>\n\n`;
-    msg += `<i>Total de registros: ${updatedList.length}</i>\n\n`;
-
-    const buttons = [];
-
-    updatedList.forEach((item, i) => {
-      try {
-        const data = JSON.parse(item);
-        const preview = (data.text || "(sem texto)").substring(0, 40);
-
-        msg += `#${i + 1} → ${preview}\n\n`;
-
-        buttons.push([
-          {
-            text: `👁️ Ver #${i + 1}`,
-            callback_data: `w_show_${gId}_${i}`
-          }
-        ]);
-      } catch {}
-    });
-
-    buttons.push([
-      { text: "⬅️ Voltar", callback_data: `cfg_welcome_${gId}` }
-    ]);
-
-    await ctx.editMessageText(msg, {
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: buttons
-      }
-    });
-
-  } catch (e) {
-    console.log("Erro no w_del:", e.message);
-    await ctx.answerCbQuery("❌ Erro ao deletar.");
-  }
+    await redis.srem(`w_list:${gId}`, list[parseInt(index)]);
+    await ctx.answerCbQuery("Registro deletado.");
+    return ctx.editMessageReplyMarkup({ inline_keyboard: [[{ text: "🔄 Atualizar Lista", callback_data: `w_view_${gId}` }]] });
+  } catch (e) { await ctx.answerCbQuery("❌ Erro ao deletar."); }
 }
-  
+
   // --- MENU: AGENTE IA ENTERPRISE ---
   if (data === "menu_ai") {
     await ctx.editMessageText(`${c} <b>🧛 AGENTE IA ENTERPRISE</b>\n\n<i>O Ceifador está processando frequências de inteligência superior...</i>\n\nAs sombras estão aprendendo a analisar almas e automatizar o julgamento no território.\n\n🛡️ <b>Status:</b> Em desenvolvimento nas câmaras do submundo.`, {
@@ -892,88 +809,76 @@ if (redis && m.from) {
     }
   }
 
+    // =========================================================
+  // [MÓDULO] MONITOR DE PACTOS: BOAS-VINDAS (ETAPAS DO CONTRATO)
   // =========================================================
-// [MÓDULO] MONITOR DE PACTOS: BOAS-VINDAS (RITUAL & CLONAGEM)
-// =========================================================
-const ritualStep = await redis.get(`w_step:${ctx.from.id}`);
-const waitingGid = await redis.get(`w_waiting:${ctx.from.id}`);
+  const ritualStep = await redis.get(`w_step:${ctx.from.id}`);
+  const waitingGid = await redis.get(`w_waiting:${ctx.from.id}`);
 
-if ((ritualStep || waitingGid) && ctx.chat.type === "private") {
-  const m = ctx.message;
-  const text = m.text || m.caption || "";
-  const entities = m.entities || m.caption_entities || [];
-  const mediaId = m.photo ? m.photo[m.photo.length - 1].file_id : (m.video || m.animation || {}).file_id;
-  const type = m.photo ? 'photo' : (m.video ? 'video' : (m.animation ? 'animation' : null));
+  if ((ritualStep || waitingGid) && ctx.chat.type === "private") {
+    const m = ctx.message;
+    const textInput = m.text || m.caption || "";
+    const mediaId = m.photo ? m.photo[m.photo.length - 1].file_id : (m.video || m.animation || {}).file_id;
+    const type = m.photo ? 'photo' : (m.video ? 'video' : (m.animation ? 'animation' : null));
 
-  // --- [A] RITUAL POR ETAPAS (CONTRATO) ---
-  if (ritualStep) {
-    const [stage, gId] = ritualStep.split(":");
-    if (stage === "text") {
-      await redis.hset(`w_temp:${ctx.from.id}`, "text", text, "entities", JSON.stringify(entities));
-      await redis.set(`w_step:${ctx.from.id}`, `media:${gId}`);
-      return ctx.reply(`${c} <b>ETAPA 2: A VISÃO (MÍDIA)</b>\n\nTexto selado! Envie a <b>MÍDIA</b> (Foto, Vídeo ou GIF).\n\n<i>Use /pular se desejar apenas o Verbo.</i>`, { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "⬅️ Voltar ao Texto", callback_data: `w_ritual_${gId}` }], [{ text: "❌ Interromper", callback_data: `cfg_welcome_${gId}` }]] } });
-    }
-    if (stage === "media") {
-      if (text !== "/pular" && mediaId) await redis.hset(`w_temp:${ctx.from.id}`, "media", mediaId, "type", type);
-      await redis.set(`w_step:${ctx.from.id}`, `buttons:${gId}`);
-      return ctx.reply(`${c} <b>ETAPA 3: AS CORRENTES (BOTÕES)</b>\n\nEnvie a estrutura dos botões.\n\n<i>Use /pular para uma recepção sem portais.</i>`, { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "❌ Interromper", callback_data: `cfg_welcome_${gId}` }]] } });
-    }
-    if (stage === "buttons") {
-      const temp = await redis.hgetall(`w_temp:${ctx.from.id}`);
-      let buttons = [];
-      if (text !== "/pular") {
-        const lines = text.split('\n');
-        const styleMap = { r: "danger", g: "success", p: "primary", s: "secondary" };
-        lines.forEach(line => {
-          const row = [];
-          const brutusRegex = /\{\[(?:#([rgps]) )?(.*?) - (.*?)\]\}/g;
-          const roseRegex = /\[(.*?)\]\(buttonurl(?:#(\w+))?:\/\/(.*?)(?::same)?\)/g;
-          let match;
-          while ((match = brutusRegex.exec(line)) !== null) { row.push({ text: match[2].trim(), url: match[3].trim(), style: styleMap[match[1]] || "primary" }); }
-          while ((match = roseRegex.exec(line)) !== null) { row.push({ text: match[1].trim(), url: match[3].trim(), style: styleMap[match[2]] || "primary" }); }
-          if (row.length > 0) buttons.push(row);
+    // --- ETAPA DO CONTRATO ---
+    if (ritualStep) {
+      const [stage, gId] = ritualStep.split(":");
+      
+      if (stage === "txt") {
+        const cleaned = (m.entities || m.caption_entities || []).map(ent => {
+          const { user, ...rest } = ent; return rest;
+        });
+        await redis.hset(`w_temp:${ctx.from.id}`, "text", textInput, "entities", JSON.stringify(cleaned));
+        await redis.set(`w_step:${ctx.from.id}`, `med:${gId}`);
+        return ctx.reply(`${c} <b>TEXTO SELADO!</b>\nEnvie a <b>MÍDIA</b> ou /pular.`);
+      }
+
+      if (stage === "med") {
+        if (textInput !== "/pular" && mediaId) await redis.hset(`w_temp:${ctx.from.id}`, "media", mediaId, "type", type);
+        await redis.set(`w_step:${ctx.from.id}`, `btn:${gId}`);
+        return ctx.reply(`${c} <b>MÍDIA REGISTRADA!</b>\nEnvie os botões (Nome - Link) ou /pular.`);
+      }
+
+      if (stage === "btn") {
+        if (textInput !== "/pular") {
+          let buttons = [];
+          textInput.split('\n').forEach(line => {
+            const row = [];
+            line.split('&&').forEach(p => {
+              const [t, l] = p.split(' - ');
+              if (t && l) {
+                let s = "primary"; let label = t.trim();
+                if (label.includes("#r")) { s = "danger"; label = label.replace("#r", "").trim(); }
+                if (label.includes("#g")) { s = "success"; label = label.replace("#g", "").trim(); }
+                if (label.includes("#p")) { s = "primary"; label = label.replace("#p", "").trim(); }
+                row.push({ text: label, url: l.trim(), style: s });
+              }
+            });
+            if (row.length > 0) buttons.push(row);
+          });
+          await redis.hset(`w_temp:${ctx.from.id}`, "buttons", JSON.stringify(buttons));
+        }
+        await redis.del(`w_step:${ctx.from.id}`);
+        return ctx.reply(`${c} <b>PRONTO!</b>\nVolte ao menu e clique em <b>🔥 SELAR PACTO</b>.`, { 
+          reply_markup: { inline_keyboard: [[{ text: "📜 Voltar ao Menu", callback_data: `w_ritual_${gId}` }]] } 
         });
       }
-      const v = { text: temp.text, media: temp.media || null, type: temp.type || 'text', entities: JSON.parse(temp.entities || "[]"), reply_markup: buttons.length > 0 ? { inline_keyboard: buttons } : undefined, show_above_text: true };
-      await redis.sadd(`w_list:${gId}`, JSON.stringify(v));
-      await redis.del(`w_step:${ctx.from.id}`, `w_temp:${ctx.from.id}`);
-      return ctx.reply(`${c} <b>RITUAL CONCLUÍDO!</b>\n\nA alma do território foi moldada.`, { reply_markup: { inline_keyboard: [[{ text: "🏠 Voltar ao Menu", callback_data: `cfg_welcome_${gId}` }]] } });
+    }
+
+    // --- PACTO DE SANGUE (CLONAGEM) ---
+    if (waitingGid) {
+      if (!m.reply_to_message) return ctx.reply("Responda à mensagem!");
+      const msg = m.reply_to_message;
+      const entities = (msg.entities || msg.caption_entities || []).map(ent => { const { user, ...rest } = ent; return rest; });
+      const mId = msg.photo ? msg.photo[msg.photo.length - 1].file_id : (msg.video || msg.animation || {}).file_id;
+      const v = { text: msg.text || msg.caption || "", media: mId || null, type: msg.photo ? 'photo' : (msg.video ? 'video' : (msg.animation ? 'animation' : 'text')), entities: entities, reply_markup: msg.reply_markup, show_caption_above_media: true };
+      await redis.sadd(`w_list:${waitingGid}`, JSON.stringify(v));
+      await redis.del(`w_waiting:${ctx.from.id}`);
+      return ctx.reply("<b>DNA CLONADO!</b>", { reply_markup: { inline_keyboard: [[{ text: "🏠 Menu", callback_data: `cfg_welcome_${waitingGid}` }]] } });
     }
   }
-  
-// --- [PACTO DE SANGUE: DNA LIMPO] ---
-if (waitingGid && ctx.chat.type === "private") {
-  const m = ctx.message;
-  if (!m.reply_to_message) return ctx.reply("Responda à mensagem!");
 
-  const msg = m.reply_to_message;
-  
-  // LIMPEZA: Remove o campo 'user' que faz o Telegram rejeitar o emoji premium no fetch
-  const entities = (msg.entities || msg.caption_entities || []).map(ent => {
-    const { user, ...rest } = ent;
-    return rest;
-  });
-
-  const mediaId = msg.photo ? msg.photo[msg.photo.length - 1].file_id : (msg.video || msg.animation || msg.sticker || msg.audio || msg.voice || {}).file_id;
-  const type = msg.photo ? 'photo' : (msg.video ? 'video' : (msg.animation ? 'animation' : (msg.sticker ? 'sticker' : (msg.audio ? 'audio' : (msg.voice ? 'voice' : 'text')))));
-
-  const v = {
-    text: msg.text || msg.caption || "",
-    media: mediaId || null,
-    type: type,
-    entities: entities, // DNA puro salvo aqui
-    reply_markup: msg.reply_markup || undefined 
-  };
-
-  await redis.sadd(`w_list:${waitingGid}`, JSON.stringify(v));
-  await redis.del(`w_waiting:${ctx.from.id}`);
-  
-  return ctx.reply(`${c} <b>DNA EXTRAÍDO!</b>\nA alma foi limpa e cravada no Redis.`, { 
-    parse_mode: "HTML",
-    reply_markup: { inline_keyboard: [[{ text: "🏠 Menu", callback_data: `cfg_welcome_${waitingGid}` }]] }
-  });
-}
-}
   const reply = m.reply_to_message;
   const isAdm = await isAdmin(ctx);
 
