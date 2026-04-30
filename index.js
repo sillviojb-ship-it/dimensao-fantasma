@@ -1066,7 +1066,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
   }
 
 
-// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL COM TODAS AS TAGS] ---
+// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL UNIFICADA E BLINDADA] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1079,7 +1079,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const fullN = `${u.first_name || ""} ${u.last_name || ""}`.trim();
     const rulesL = `https://t.me/c/${ctx.chat.id.toString().replace("-100", "")}/1`;
 
-    // TODAS AS SUAS TAGS (Maiúsculas e Minúsculas)
     const tags = {
       '{ID}': u.id, '{id}': u.id,
       '{NAME}': u.first_name || "", '{name}': u.first_name || "",
@@ -1103,7 +1102,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     let ents = m.entities || m.caption_entities || [];
     let fEnts = ents.filter(e => e.offset >= cmdL).map(e => ({ ...e, offset: e.offset - cmdL }));
     
-    // Garantia do Link no Mention
     const mentionIdx = clean.indexOf(u.first_name);
     if (mentionIdx !== -1) {
         fEnts.push({ type: 'text_link', offset: mentionIdx, length: u.first_name.length, url: `tg://user?id=${u.id}` });
@@ -1111,8 +1109,9 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
 
     const getE = (txtBtn) => {
       const offOriginal = ori.indexOf(txtBtn);
-      const e = ents.find(en => en.type === "custom_emoji" && en.offset >= offOriginal && en.offset < offOriginal + txtBtn.length);
-      return e ? e.custom_emoji_id : null;
+      if (offOriginal === -1) return null;
+      const entity = ents.find(e => e.type === "custom_emoji" && e.offset >= offOriginal && e.offset < offOriginal + txtBtn.length);
+      return entity ? entity.custom_emoji_id : null;
     };
 
     const lines = clean.split('\n');
@@ -1127,9 +1126,9 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
         const eId = getE(txt);
         if (eId) { 
           b.icon_custom_emoji_id = eId; 
-          b.text = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim(); 
+          const semEmoji = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim();
+          if (semEmoji.length > 0) b.text = semEmoji;
         }
-        // Funções Extras (Alert, Pop-up, Share, Copy, Del)
         if (url.startsWith("alert:") || url.startsWith("popup:")) {
           const isFull = url.startsWith("alert:");
           const msg = url.replace(/alert:|popup:/, "").trim();
@@ -1162,7 +1161,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     let endP = "sendMessage";
     if (m.photo) { endP = "sendPhoto"; body.photo = m.photo[m.photo.length - 1].file_id; }
     else if (m.video || m.animation) { endP = m.video ? "sendVideo" : "sendAnimation"; body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id; }
-    else if (m.audio || m.voice) { endP = "sendAudio"; body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id; }
+    else if (m.audio || m.voice) { endP = m.audio ? "sendAudio" : "sendVoice"; body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id; }
     
     if (endP !== "sendMessage") { body.caption = body.text; body.caption_entities = body.entities; delete body.text; delete body.entities; }
     
