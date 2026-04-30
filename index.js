@@ -1066,7 +1066,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
   }
 
 
-// --- [COMANDO: /SAY SUPREMO - MANTENDO SEU DNA ORIGINAL] ---
+// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL COM TODAS AS TAGS] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1074,12 +1074,12 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const cmdL = space === -1 ? ori.length : space + 1;
     let clean = ori.slice(cmdL);
     
-    // Suas Tags Dinâmicas (Mantidas intactas)
     const u = m.reply_to_message ? m.reply_to_message.from : m.from;
     const now = new Date();
     const fullN = `${u.first_name || ""} ${u.last_name || ""}`.trim();
     const rulesL = `https://t.me/c/${ctx.chat.id.toString().replace("-100", "")}/1`;
 
+    // TODAS AS SUAS TAGS (Maiúsculas e Minúsculas)
     const tags = {
       '{ID}': u.id, '{id}': u.id,
       '{NAME}': u.first_name || "", '{name}': u.first_name || "",
@@ -1098,12 +1098,12 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
 
     Object.keys(tags).forEach(t => { clean = clean.split(t).join(tags[t]); });
 
-    // --- SUA LÓGICA DE DNA ORIGINAL ---
     let btns = [];
     const styles = { r: "danger", g: "success", p: "primary" };
     let ents = m.entities || m.caption_entities || [];
     let fEnts = ents.filter(e => e.offset >= cmdL).map(e => ({ ...e, offset: e.offset - cmdL }));
     
+    // Garantia do Link no Mention
     const mentionIdx = clean.indexOf(u.first_name);
     if (mentionIdx !== -1) {
         fEnts.push({ type: 'text_link', offset: mentionIdx, length: u.first_name.length, url: `tg://user?id=${u.id}` });
@@ -1111,7 +1111,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
 
     const getE = (txtBtn) => {
       const offOriginal = ori.indexOf(txtBtn);
-      if (offOriginal === -1) return null;
       const e = ents.find(en => en.type === "custom_emoji" && en.offset >= offOriginal && en.offset < offOriginal + txtBtn.length);
       return e ? e.custom_emoji_id : null;
     };
@@ -1125,18 +1124,23 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       
       const addB = (st, txt, url) => {
         let b = { text: txt.trim() };
-        const eId = getE(txt); // Mantive sua função original aqui
+        const eId = getE(txt);
         if (eId) { 
           b.icon_custom_emoji_id = eId; 
           b.text = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim(); 
         }
+        // Funções Extras (Alert, Pop-up, Share, Copy, Del)
         if (url.startsWith("alert:") || url.startsWith("popup:")) {
           const isFull = url.startsWith("alert:");
           const msg = url.replace(/alert:|popup:/, "").trim();
           const cb = `alert${isFull ? "_AL_" : "_PP_"}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
           b.callback_data = cb;
           if (redis) redis.set(`alert_msg:${cb}`, msg, 'EX', 3600);
-        } else { b.url = url.trim(); }
+        } else if (url.startsWith("share:")) { b.url = `https://t.me/share/url?url=${encodeURIComponent(url.replace("share:", ""))}`; }
+        else if (url.startsWith("copy:")) { b.callback_data = `copy_${Buffer.from(url.replace("copy:", "")).toString('base64')}`; }
+        else if (url === "del") { b.callback_data = "del_msg"; }
+        else { b.url = url.trim(); }
+        
         if (st) b.style = styles[st] || st;
         row.push(b);
       };
@@ -1148,7 +1152,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
 
     const fTxt = clean.replace(/\{\[(?:#[rgp] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
     
-    // --- ENVIO MULTIMÍDIA (Foto, Vídeo, Áudio, Animação) ---
     const body = { 
       chat_id: ctx.chat.id, text: fTxt, entities: fEnts, 
       reply_to_message_id: m.reply_to_message?.message_id, 
@@ -1159,7 +1162,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     let endP = "sendMessage";
     if (m.photo) { endP = "sendPhoto"; body.photo = m.photo[m.photo.length - 1].file_id; }
     else if (m.video || m.animation) { endP = m.video ? "sendVideo" : "sendAnimation"; body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id; }
-    else if (m.audio || m.voice) { endP = m.audio ? "sendAudio" : "sendVoice"; body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id; }
+    else if (m.audio || m.voice) { endP = "sendAudio"; body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id; }
     
     if (endP !== "sendMessage") { body.caption = body.text; body.caption_entities = body.entities; delete body.text; delete body.entities; }
     
