@@ -1194,9 +1194,6 @@ fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
     await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
-    const resposta = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
-  method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
-});
 const resultado = await resposta.json();
 console.log("SAY RESULTADO:", JSON.stringify(resultado));
 console.log("SAY BODY:", JSON.stringify(body));
