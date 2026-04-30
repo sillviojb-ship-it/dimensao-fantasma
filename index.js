@@ -1065,7 +1065,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
     }
   }
 
-// --- [O VERBO SUPREMO: VERSÃO DEFINITIVA DIMENSÃO FANTASMA] ---
+// --- [COMANDO SAY: MANIFESTAÇÃO DO CEIFADOR - VERSÃO SUPREMA] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1073,7 +1073,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const cmdL = space === -1 ? ori.length : space + 1;
     let clean = ori.slice(cmdL);
     
-    // Alvo das tags
+    // --- [NÚCLEO DE TAGS DINÂMICAS] ---
     const u = m.reply_to_message ? m.reply_to_message.from : m.from;
     const now = new Date();
     const fullN = `${u.first_name || ""} ${u.last_name || ""}`.trim();
@@ -1082,113 +1082,88 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const tags = {
       '{ID}': u.id, '{id}': u.id,
       '{NAME}': u.first_name || "", '{name}': u.first_name || "",
+      '{FIRST}': u.first_name || "", '{first}': u.first_name || "",
+      '{SURNAME}': u.last_name || "", '{surname}': u.last_name || "",
       '{NAMESURNAME}': fullN, '{namesurname}': fullN,
+      '{USERNAME}': u.username ? `@${u.username}` : "n/a", '{username}': u.username ? `@${u.username}` : "n/a",
       '{MENTION}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`, '{mention}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`,
+      '{GROUPNAME}': ctx.chat.title || "", '{groupname}': ctx.chat.title || "",
+      '{LANG}': u.language_code || "pt-br", '{lang}': u.language_code || "pt-br",
       '{DATE}': now.toLocaleDateString("pt-BR"), '{date}': now.toLocaleDateString("pt-BR"),
       '{TIME}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), '{time}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      '{WEEKDAY}': now.toLocaleDateString("pt-BR", { weekday: "long" }), '{weekday}': now.toLocaleDateString("pt-BR", { weekday: "long" }),
       '{RULES}': rulesL, '{rules}': rulesL
     };
 
-    // Aplica as tags
+    // Substituição global de tags
     Object.keys(tags).forEach(t => { clean = clean.split(t).join(tags[t]); });
 
-    let buttons = [];
-    const styles = { r: "danger", g: "success", p: "primary", s: "secondary" };
+    let btns = [];
+    const styles = { r: "danger", g: "success", p: "primary" };
     const ents = m.entities || m.caption_entities || [];
 
-    // --- FUNÇÃO PARA PEGAR EMOJI PREMIUM DO TECLADO ---
-    const getEmojiFromText = (targetText) => {
-      const offsetInOriginal = ori.indexOf(targetText);
-      if (offsetInOriginal === -1) return null;
-      const found = ents.find(e => 
-        e.type === 'custom_emoji' && 
-        e.offset >= offsetInOriginal && 
-        e.offset < (offsetInOriginal + targetText.length)
-      );
-      return found ? found.custom_emoji_id : null;
+    // --- FUNÇÃO DNA: CAPTURA EMOJI PREMIUM DO TECLADO ---
+    const getE = (txtBtn) => {
+      const offOriginal = ori.indexOf(txtBtn);
+      if (offOriginal === -1) return null;
+      const entity = ents.find(e => e.type === "custom_emoji" && e.offset >= offOriginal && offOriginal < e.offset + e.length);
+      return entity ? entity.custom_emoji_id : null;
     };
 
-    // PROCESSADOR DE BOTÕES
     const lines = clean.split('\n');
     lines.forEach(line => {
       const row = [];
-      const bRegex = /\{\[(?:#([rgps]) )?(.*?) - (.*?)\]\}/g;
-      const rRegex = /\[(.*?)\]\(buttonurl(?:#(\w+))?:\/\/(.*?)(?::same)?\)/g;
+      const regA = /\{\[(?:#([rgp]) )?(.*?) - (.*?)\]\}/g;
+      const regB = /\[(.*?)\]\(buttonurl(?:#(\w+))?:\/\/(.*?)(?::same)?\)/g;
       let match;
-
-      const processBtn = (txt, url, st) => {
-        let label = txt.trim();
-        let btn = { text: label };
-        let finalUrl = url.split(']')[0].replace(/[()]/g, '').trim();
-
-        // Detecta Emoji Premium no Teclado
-        const autoEmojiId = getEmojiFromText(label);
-        if (autoEmojiId) {
-          btn.icon_custom_emoji_id = autoEmojiId;
-          btn.text = label.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim();
+      
+      const addB = (st, txt, url) => {
+        let b = { text: txt.trim() };
+        const eId = getE(txt);
+        if (eId) { 
+          b.icon_custom_emoji_id = eId; 
+          b.text = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim(); 
         }
-
-        // Alert / Popup
-        if (finalUrl.startsWith("alert:") || finalUrl.startsWith("popup:")) {
-          const msg = finalUrl.replace(/alert:|popup:/, "").trim();
-          const cb = `alert${finalUrl.startsWith("alert:") ? "_AL_" : "_PP_"}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
-          btn.callback_data = cb;
+        // Tratamento de Alertas e Pop-ups
+        if (url.startsWith("alert:") || url.startsWith("popup:")) {
+          const isFull = url.startsWith("alert:");
+          const msg = url.replace(/alert:|popup:/, "").trim();
+          const type = isFull ? "_AL_" : "_PP_";
+          const cb = `alert${type}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
+          b.callback_data = cb;
           if (redis) redis.set(`alert_msg:${cb}`, msg, 'EX', 3600);
-        } else {
-          btn.url = finalUrl;
-        }
-        if (st) btn.style = styles[st] || "primary";
-        return btn;
+        } else { b.url = url.trim(); }
+        if (st) b.style = styles[st] || st;
+        row.push(b);
       };
 
-      while ((match = bRegex.exec(line)) !== null) row.push(processBtn(match[2], match[3], match[1]));
-      while ((match = rRegex.exec(line)) !== null) row.push(processBtn(match[1], match[3], match[2]));
-      if (row.length > 0) buttons.push(row);
+      while ((match = regA.exec(line)) !== null) addB(match[1], match[2], match[3]);
+      while ((match = regB.exec(line)) !== null) addB(match[2], match[1], match[3]);
+      if (row.length > 0) btns.push(row);
     });
 
-    const finalText = clean.replace(/\{\[(?:#[rgps] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
-    
-    // --- LIMPEZA DE DNA (RECALCULO DE ENTIDADES) ---
-    let fEnts = ents.filter(e => e.offset >= cmdL)
-      .map(e => {
-        const { user, ...rest } = e;
-        return { ...rest, offset: e.offset - cmdL };
-      })
-      .filter(e => e.offset < finalText.length);
+    const fTxt = clean.replace(/\{\[(?:#[rgp] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
+    let fEnts = ents.filter(e => e.offset >= cmdL).map(e => ({ ...e, offset: e.offset - cmdL })).filter(e => e.offset < fTxt.length);
 
     const body = { 
-      chat_id: ctx.chat.id, 
-      text: finalText, 
-      entities: fEnts,
+      chat_id: ctx.chat.id, text: fTxt, entities: fEnts, parse_mode: 'HTML',
       reply_to_message_id: m.reply_to_message?.message_id, 
-      reply_markup: { inline_keyboard: buttons }, 
-      show_above_text: true, 
-      expand_media_caption: true
+      reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined, 
+      show_above_text: true, expand_media_caption: true 
     };
 
-    if (finalText.includes("<") && finalText.includes(">")) body.parse_mode = 'HTML';
-
-    let endpoint = "sendMessage";
-    if (m.photo) {
-      endpoint = "sendPhoto"; body.photo = m.photo[m.photo.length - 1].file_id;
-    } else if (m.video || m.animation) {
-      endpoint = m.video ? "sendVideo" : "sendAnimation";
-      body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id;
-    }
+    let endP = "sendMessage";
+    if (m.photo) { endP = "sendPhoto"; body.photo = m.photo[m.photo.length - 1].file_id; }
+    else if (m.video || m.animation) { endP = m.video ? "sendVideo" : "sendAnimation"; body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id; }
+    else if (m.audio || m.voice) { endP = m.audio ? "sendAudio" : "sendVoice"; body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id; }
     
-    if (endpoint !== "sendMessage") {
-      body.caption = body.text; body.caption_entities = body.entities;
-      delete body.text; delete body.entities;
-    }
+    if (endP !== "sendMessage") { body.caption = body.text; body.caption_entities = body.entities; delete body.text; delete body.entities; }
     
-    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endpoint}`, {
+    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
-
     await ctx.deleteMessage().catch(() => {});
-  } catch (err) {
-    console.log("Erro Say Supremo:", err.message);
-  }
+  } catch (err) { console.log("Erro na Manifestação:", err.message); }
   return;
 }
 
