@@ -1161,6 +1161,9 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     });
 
     const fTxt = clean.replace(/\{\[(?:#[rgp] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
+
+// Remove entities cujo offset ultrapassa o tamanho do texto final
+fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
     
     const body = { 
       chat_id: ctx.chat.id, text: fTxt, entities: fEnts.length > 0 ? fEnts : undefined,
