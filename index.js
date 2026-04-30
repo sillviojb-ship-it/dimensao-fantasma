@@ -1066,7 +1066,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
   }
 
 
-// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL UNIFICADA E BLINDADA] ---
+// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL BLINDADA] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1085,7 +1085,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       '{FIRST}': u.first_name || "", '{first}': u.first_name || "",
       '{SURNAME}': u.last_name || "", '{surname}': u.last_name || "",
       '{NAMESURNAME}': fullN, '{namesurname}': fullN,
-      '{USERNAME}': u.username ? `@\( {u.username}` : "n/a", '{username}': u.username ? `@ \){u.username}` : "n/a",
+      '{USERNAME}': u.username ? `@${u.username}` : "n/a", '{username}': u.username ? `@${u.username}` : "n/a",
       '{MENTION}': u.first_name, '{mention}': u.first_name,
       '{GROUPNAME}': ctx.chat.title || "", '{groupname}': ctx.chat.title || "",
       '{LANG}': u.language_code || "pt-br", '{lang}': u.language_code || "pt-br",
@@ -1107,15 +1107,9 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
         fEnts.push({ type: 'text_link', offset: mentionIdx, length: u.first_name.length, url: `tg://user?id=${u.id}` });
     }
 
-    // === CORREÇÃO 1: Função getE corrigida ===
+    // Busca simplificada para o DNA funcionar sem erro
     const getE = (txtBtn) => {
-      const offOriginal = ori.indexOf(txtBtn);
-      if (offOriginal === -1) return null;
-      const e = ents.find(en =>
-        en.type === "custom_emoji" &&
-        en.offset >= offOriginal &&
-        en.offset < offOriginal + txtBtn.length
-      );
+      const e = ents.find(en => en.type === "custom_emoji");
       return e ? e.custom_emoji_id : null;
     };
 
@@ -1129,32 +1123,22 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       const addB = (st, txt, url) => {
         let b = { text: txt.trim() };
         const eId = getE(txt);
-        
-        // === CORREÇÃO 2: Tratamento seguro do emoji no botão ===
         if (eId) { 
           b.icon_custom_emoji_id = eId; 
-          const semEmoji = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim();
-          if (semEmoji.length > 0) b.text = semEmoji;
+          // Mantém o texto para o botão não ficar vazio
+          b.text = txt.trim(); 
         }
         
         if (url.startsWith("alert:") || url.startsWith("popup:")) {
           const isFull = url.startsWith("alert:");
           const msg = url.replace(/alert:|popup:/, "").trim();
-          const cb = `alert\( {isFull ? "_AL_" : "_PP_"} \){Buffer.from(msg).toString('base64').slice(0, 15)}`;
+          const cb = `alert${isFull ? "_AL_" : "_PP_"}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
           b.callback_data = cb;
           if (redis) redis.set(`alert_msg:${cb}`, msg, 'EX', 3600);
-        } else if (url.startsWith("share:")) { 
-          b.url = `https://t.me/share/url?url=${encodeURIComponent(url.replace("share:", ""))}`; 
-        }
-        else if (url.startsWith("copy:")) { 
-          b.callback_data = `copy_${Buffer.from(url.replace("copy:", "")).toString('base64')}`; 
-        }
-        else if (url === "del") { 
-          b.callback_data = "del_msg"; 
-        }
-        else { 
-          b.url = url.trim(); 
-        }
+        } else if (url.startsWith("share:")) { b.url = `https://t.me/share/url?url=${encodeURIComponent(url.replace("share:", ""))}`; }
+        else if (url.startsWith("copy:")) { b.callback_data = `copy_${Buffer.from(url.replace("copy:", "")).toString('base64')}`; }
+        else if (url === "del") { b.callback_data = "del_msg"; }
+        else { b.url = url.trim(); }
         
         if (st) b.style = styles[st] || st;
         row.push(b);
@@ -1179,20 +1163,16 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     else if (m.video || m.animation) { endP = m.video ? "sendVideo" : "sendAnimation"; body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id; }
     else if (m.audio || m.voice) { endP = m.audio ? "sendAudio" : "sendVoice"; body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id; }
     
-    if (endP !== "sendMessage") { 
-      body.caption = body.text; 
-      body.caption_entities = body.entities; 
-      delete body.text; 
-      delete body.entities; 
-    }
+    if (endP !== "sendMessage") { body.caption = body.text; body.caption_entities = body.entities; delete body.text; delete body.entities; }
     
-    await fetch(`https://api.telegram.org/bot\( {process.env.BOT_TOKEN}/ \){endP}`, {
+    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
     await ctx.deleteMessage().catch(() => {});
   } catch (err) { console.log("Erro no Say:", err.message); }
   return;
 }
+
 // =======================
 // COMANDO: /warn (NOVO)
 // =======================
