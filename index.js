@@ -1065,7 +1065,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
     }
   }
 
-// --- [COMANDO SAY SUPREMO: VERSÃO DIMENSÃO FANTASMA 2026] ---
+// --- [COMANDO SAY SUPREMO: AUTO-DETECÇÃO DE EMOJI PREMIUM NOS BOTÕES] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1073,7 +1073,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const cmdL = space === -1 ? ori.length : space + 1;
     let clean = ori.slice(cmdL);
     
-    // --- [NÚCLEO DE TAGS DINÂMICAS: MAIÚSCULAS E MINÚSCULAS] ---
     const u = m.reply_to_message ? m.reply_to_message.from : m.from;
     const now = new Date();
     const fullN = `${u.first_name || ""} ${u.last_name || ""}`.trim();
@@ -1093,18 +1092,28 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       '{RULES}': rulesL, '{rules}': rulesL
     };
 
-    // Substituição de todas as tags possíveis
     Object.keys(tags).forEach(t => { clean = clean.split(t).join(tags[t]); });
 
     let buttons = [];
     const styles = { r: "danger", g: "success", p: "primary", s: "secondary" };
     const ents = m.entities || m.caption_entities || [];
 
-    // --- [PROCESSADOR DE LINHAS: BOTÕES HÍBRIDOS + ÍCONES + ALERTA] ---
+    // --- [MOTOR DE BUSCA DE EMOJI PREMIUM NO TECLADO] ---
+    const getEmojiFromText = (targetText) => {
+      const offsetInOriginal = ori.indexOf(targetText);
+      if (offsetInOriginal === -1) return null;
+      // Procura uma entidade de emoji premium que esteja "dentro" do texto do botão
+      const found = ents.find(e => 
+        e.type === 'custom_emoji' && 
+        e.offset >= offsetInOriginal && 
+        e.offset < (offsetInOriginal + targetText.length)
+      );
+      return found ? found.custom_emoji_id : null;
+    };
+
     const lines = clean.split('\n');
     lines.forEach(line => {
       const row = [];
-      // Regex para Brutus e Rose operando juntos
       const bRegex = /\{\[(?:#([rgps]) )?(.*?) - (.*?)\]\}/g;
       const rRegex = /\[(.*?)\]\(buttonurl(?:#(\w+))?:\/\/(.*?)(?::same)?\)/g;
       let match;
@@ -1114,22 +1123,21 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
         let btn = { text: label };
         let finalUrl = url.split(']')[0].replace(/[()]/g, '').trim();
 
-        // Suporte a Ícone (Emoji Premium) no botão: "ID_EMOJI Texto"
-        let parts = label.split(" ");
-        if (/^\d{10,}$/.test(parts[0])) {
-          btn.icon_custom_emoji_id = parts[0];
-          btn.text = parts.slice(1).join(" ");
+        // Tenta pegar o ID do emoji premium automaticamente do que você digitou
+        const autoEmojiId = getEmojiFromText(label);
+        if (autoEmojiId) {
+          btn.icon_custom_emoji_id = autoEmojiId;
+          // Limpa o caractere visual do emoji para não ficar duplicado no botão
+          btn.text = label.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim();
         }
 
-        // Funções de Alerta e Popup
         if (finalUrl.startsWith("alert:") || finalUrl.startsWith("popup:")) {
           const msg = finalUrl.replace(/alert:|popup:/, "").trim();
           const cb = `alert${finalUrl.startsWith("alert:") ? "_AL_" : "_PP_"}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
           btn.callback_data = cb;
           if (redis) redis.set(`alert_msg:${cb}`, msg, 'EX', 3600);
-        } else {
-          btn.url = finalUrl;
-        }
+        } else { btn.url = finalUrl; }
+        
         if (st) btn.style = styles[st] || "primary";
         return btn;
       };
@@ -1142,20 +1150,21 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
 
     const finalText = clean.replace(/\{\[(?:#[rgps] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
     
-    // --- [LIMPEZA DE DNA E RECALCULO DE ENTIDADES] ---
     let fEnts = ents.filter(e => e.offset >= cmdL)
                    .map(e => {
-                     const { user, ...rest } = e; // Mata o rastro do usuário (Emoji Premium OK)
+                     const { user, ...rest } = e; 
                      return { ...rest, offset: e.offset - cmdL };
                    })
                    .filter(e => e.offset < finalText.length);
 
     const body = { 
-      chat_id: ctx.chat.id, text: finalText, entities: fEnts, parse_mode: 'HTML',
+      chat_id: ctx.chat.id, text: finalText, entities: fEnts,
       reply_to_message_id: m.reply_to_message?.message_id, 
       reply_markup: { inline_keyboard: buttons }, 
-      show_above_text: true, expand_media_caption: true
+      show_caption_above_media: true, expand_media_caption: true
     };
+
+    if (finalText.includes("<") && finalText.includes(">")) body.parse_mode = 'HTML';
 
     let endpoint = "sendMessage";
     if (m.photo) {
