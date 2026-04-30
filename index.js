@@ -1065,7 +1065,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
     }
   }
 
-// --- [COMANDO SAY: MANIFESTAÇÃO DO CEIFADOR - VERSÃO SUPREMA] ---
+// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL ABSOLUTA] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1073,7 +1073,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const cmdL = space === -1 ? ori.length : space + 1;
     let clean = ori.slice(cmdL);
     
-    // --- [NÚCLEO DE TAGS DINÂMICAS] ---
     const u = m.reply_to_message ? m.reply_to_message.from : m.from;
     const now = new Date();
     const fullN = `${u.first_name || ""} ${u.last_name || ""}`.trim();
@@ -1082,32 +1081,26 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const tags = {
       '{ID}': u.id, '{id}': u.id,
       '{NAME}': u.first_name || "", '{name}': u.first_name || "",
-      '{FIRST}': u.first_name || "", '{first}': u.first_name || "",
       '{SURNAME}': u.last_name || "", '{surname}': u.last_name || "",
       '{NAMESURNAME}': fullN, '{namesurname}': fullN,
       '{USERNAME}': u.username ? `@${u.username}` : "n/a", '{username}': u.username ? `@${u.username}` : "n/a",
-      '{MENTION}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`, '{mention}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`,
-      '{GROUPNAME}': ctx.chat.title || "", '{groupname}': ctx.chat.title || "",
-      '{LANG}': u.language_code || "pt-br", '{lang}': u.language_code || "pt-br",
       '{DATE}': now.toLocaleDateString("pt-BR"), '{date}': now.toLocaleDateString("pt-BR"),
       '{TIME}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), '{time}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-      '{WEEKDAY}': now.toLocaleDateString("pt-BR", { weekday: "long" }), '{weekday}': now.toLocaleDateString("pt-BR", { weekday: "long" }),
+      '{MENTION}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`, '{mention}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`,
+      '{GROUPNAME}': ctx.chat.title || "", '{groupname}': ctx.chat.title || "",
       '{RULES}': rulesL, '{rules}': rulesL
     };
 
-    // Substituição global de tags
     Object.keys(tags).forEach(t => { clean = clean.split(t).join(tags[t]); });
 
     let btns = [];
     const styles = { r: "danger", g: "success", p: "primary" };
     const ents = m.entities || m.caption_entities || [];
 
-    // --- FUNÇÃO DNA: CAPTURA EMOJI PREMIUM DO TECLADO ---
-    const getE = (txtBtn) => {
-      const offOriginal = ori.indexOf(txtBtn);
-      if (offOriginal === -1) return null;
-      const entity = ents.find(e => e.type === "custom_emoji" && e.offset >= offOriginal && offOriginal < e.offset + e.length);
-      return entity ? entity.custom_emoji_id : null;
+    const getE = (t) => {
+      const off = ori.indexOf(t);
+      const e = ents.find(en => en.type === "custom_emoji" && en.offset >= off && en.offset < off + t.length);
+      return e ? e.custom_emoji_id : null;
     };
 
     const lines = clean.split('\n');
@@ -1124,12 +1117,9 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
           b.icon_custom_emoji_id = eId; 
           b.text = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim(); 
         }
-        // Tratamento de Alertas e Pop-ups
         if (url.startsWith("alert:") || url.startsWith("popup:")) {
-          const isFull = url.startsWith("alert:");
           const msg = url.replace(/alert:|popup:/, "").trim();
-          const type = isFull ? "_AL_" : "_PP_";
-          const cb = `alert${type}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
+          const cb = `alert_${Buffer.from(msg).toString('base64').slice(0, 20)}`;
           b.callback_data = cb;
           if (redis) redis.set(`alert_msg:${cb}`, msg, 'EX', 3600);
         } else { b.url = url.trim(); }
@@ -1146,7 +1136,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     let fEnts = ents.filter(e => e.offset >= cmdL).map(e => ({ ...e, offset: e.offset - cmdL })).filter(e => e.offset < fTxt.length);
 
     const body = { 
-      chat_id: ctx.chat.id, text: fTxt, entities: fEnts, parse_mode: 'HTML',
+      chat_id: ctx.chat.id, text: fTxt, entities: fEnts.length > 0 ? fEnts : undefined, 
       reply_to_message_id: m.reply_to_message?.message_id, 
       reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined, 
       show_above_text: true, expand_media_caption: true 
@@ -1163,9 +1153,10 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
     await ctx.deleteMessage().catch(() => {});
-  } catch (err) { console.log("Erro na Manifestação:", err.message); }
+  } catch (err) { console.log("Erro no Say:", err.message); }
   return;
 }
+
 // =======================
 // COMANDO: /warn (NOVO)
 // =======================
