@@ -1066,7 +1066,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
   }
 
 
-// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL ABSOLUTA + ALERTAS] ---
+// --- [COMANDO: /SAY SUPREMO - MANTENDO SEU DNA ORIGINAL] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1074,6 +1074,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const cmdL = space === -1 ? ori.length : space + 1;
     let clean = ori.slice(cmdL);
     
+    // Suas Tags Dinâmicas (Mantidas intactas)
     const u = m.reply_to_message ? m.reply_to_message.from : m.from;
     const now = new Date();
     const fullN = `${u.first_name || ""} ${u.last_name || ""}`.trim();
@@ -1097,12 +1098,12 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
 
     Object.keys(tags).forEach(t => { clean = clean.split(t).join(tags[t]); });
 
+    // --- SUA LÓGICA DE DNA ORIGINAL ---
     let btns = [];
     const styles = { r: "danger", g: "success", p: "primary" };
     let ents = m.entities || m.caption_entities || [];
     let fEnts = ents.filter(e => e.offset >= cmdL).map(e => ({ ...e, offset: e.offset - cmdL }));
     
-    // Adiciona entidade de link para o mention manualmente
     const mentionIdx = clean.indexOf(u.first_name);
     if (mentionIdx !== -1) {
         fEnts.push({ type: 'text_link', offset: mentionIdx, length: u.first_name.length, url: `tg://user?id=${u.id}` });
@@ -1111,8 +1112,8 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const getE = (txtBtn) => {
       const offOriginal = ori.indexOf(txtBtn);
       if (offOriginal === -1) return null;
-      const entity = ents.find(e => e.type === "custom_emoji" && e.offset >= offOriginal && e.offset < offOriginal + txtBtn.length);
-      return entity ? entity.custom_emoji_id : null;
+      const e = ents.find(en => en.type === "custom_emoji" && en.offset >= offOriginal && en.offset < offOriginal + txtBtn.length);
+      return e ? e.custom_emoji_id : null;
     };
 
     const lines = clean.split('\n');
@@ -1124,17 +1125,15 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       
       const addB = (st, txt, url) => {
         let b = { text: txt.trim() };
-        const eId = getE(txt);
+        const eId = getE(txt); // Mantive sua função original aqui
         if (eId) { 
           b.icon_custom_emoji_id = eId; 
           b.text = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim(); 
         }
-        // MOTOR DE ALERTAS E POPUPS REINTEGRADO
         if (url.startsWith("alert:") || url.startsWith("popup:")) {
           const isFull = url.startsWith("alert:");
           const msg = url.replace(/alert:|popup:/, "").trim();
-          const type = isFull ? "_AL_" : "_PP_";
-          const cb = `alert${type}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
+          const cb = `alert${isFull ? "_AL_" : "_PP_"}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
           b.callback_data = cb;
           if (redis) redis.set(`alert_msg:${cb}`, msg, 'EX', 3600);
         } else { b.url = url.trim(); }
@@ -1149,8 +1148,9 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
 
     const fTxt = clean.replace(/\{\[(?:#[rgp] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
     
+    // --- ENVIO MULTIMÍDIA (Foto, Vídeo, Áudio, Animação) ---
     const body = { 
-      chat_id: ctx.chat.id, text: fTxt, entities: fEnts.length > 0 ? fEnts : undefined, 
+      chat_id: ctx.chat.id, text: fTxt, entities: fEnts, 
       reply_to_message_id: m.reply_to_message?.message_id, 
       reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined, 
       show_above_text: true, expand_media_caption: true 
@@ -1167,7 +1167,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
     await ctx.deleteMessage().catch(() => {});
-  } catch (err) { console.log("Erro na Manifestação:", err.message); }
+  } catch (err) { console.log("Erro no Say:", err.message); }
   return;
 }
 
