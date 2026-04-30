@@ -1066,7 +1066,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
   }
 
 
-// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL BLINDADA] ---
+// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL COM TODAS AS TAGS] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1104,12 +1104,18 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     
     const mentionIdx = clean.indexOf(u.first_name);
     if (mentionIdx !== -1) {
-        fEnts.push({ type: 'text_link', offset: mentionIdx, length: u.first_name.length, url: `tg://user?id=${u.id}` });
+      fEnts.push({ type: 'text_link', offset: mentionIdx, length: u.first_name.length, url: `tg://user?id=${u.id}` });
     }
 
-    // Busca simplificada para o DNA funcionar sem erro
+    // CORRIGIDO: busca o emoji no texto ORIGINAL antes das substituições de tags
     const getE = (txtBtn) => {
-      const e = ents.find(en => en.type === "custom_emoji");
+      const offOriginal = ori.indexOf(txtBtn);
+      if (offOriginal === -1) return null;
+      const e = ents.find(en =>
+        en.type === "custom_emoji" &&
+        en.offset >= offOriginal &&
+        en.offset < offOriginal + txtBtn.length
+      );
       return e ? e.custom_emoji_id : null;
     };
 
@@ -1123,22 +1129,27 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       const addB = (st, txt, url) => {
         let b = { text: txt.trim() };
         const eId = getE(txt);
-        if (eId) { 
-          b.icon_custom_emoji_id = eId; 
-          // Mantém o texto para o botão não ficar vazio
-          b.text = txt.trim(); 
+        if (eId) {
+          b.icon_custom_emoji_id = eId;
+          // CORRIGIDO: só substitui o texto se o resultado não ficar vazio
+          const semEmoji = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim();
+          if (semEmoji.length > 0) b.text = semEmoji;
         }
-        
         if (url.startsWith("alert:") || url.startsWith("popup:")) {
           const isFull = url.startsWith("alert:");
           const msg = url.replace(/alert:|popup:/, "").trim();
           const cb = `alert${isFull ? "_AL_" : "_PP_"}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
           b.callback_data = cb;
           if (redis) redis.set(`alert_msg:${cb}`, msg, 'EX', 3600);
-        } else if (url.startsWith("share:")) { b.url = `https://t.me/share/url?url=${encodeURIComponent(url.replace("share:", ""))}`; }
-        else if (url.startsWith("copy:")) { b.callback_data = `copy_${Buffer.from(url.replace("copy:", "")).toString('base64')}`; }
-        else if (url === "del") { b.callback_data = "del_msg"; }
-        else { b.url = url.trim(); }
+        } else if (url.startsWith("share:")) {
+          b.url = `https://t.me/share/url?url=${encodeURIComponent(url.replace("share:", ""))}`;
+        } else if (url.startsWith("copy:")) {
+          b.callback_data = `copy_${Buffer.from(url.replace("copy:", "")).toString('base64')}`;
+        } else if (url === "del") {
+          b.callback_data = "del_msg";
+        } else {
+          b.url = url.trim();
+        }
         
         if (st) b.style = styles[st] || st;
         row.push(b);
@@ -1152,18 +1163,30 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const fTxt = clean.replace(/\{\[(?:#[rgp] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
     
     const body = { 
-      chat_id: ctx.chat.id, text: fTxt, entities: fEnts, 
+      chat_id: ctx.chat.id, text: fTxt, entities: fEnts.length > 0 ? fEnts : undefined,
       reply_to_message_id: m.reply_to_message?.message_id, 
       reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined, 
       show_above_text: true, expand_media_caption: true 
     };
 
     let endP = "sendMessage";
-    if (m.photo) { endP = "sendPhoto"; body.photo = m.photo[m.photo.length - 1].file_id; }
-    else if (m.video || m.animation) { endP = m.video ? "sendVideo" : "sendAnimation"; body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id; }
-    else if (m.audio || m.voice) { endP = m.audio ? "sendAudio" : "sendVoice"; body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id; }
+    if (m.photo) {
+      endP = "sendPhoto";
+      body.photo = m.photo[m.photo.length - 1].file_id;
+    } else if (m.video || m.animation) {
+      endP = m.video ? "sendVideo" : "sendAnimation";
+      body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id;
+    } else if (m.audio || m.voice) {
+      endP = "sendAudio";
+      body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id;
+    }
     
-    if (endP !== "sendMessage") { body.caption = body.text; body.caption_entities = body.entities; delete body.text; delete body.entities; }
+    if (endP !== "sendMessage") {
+      body.caption = body.text;
+      body.caption_entities = body.entities;
+      delete body.text;
+      delete body.entities;
+    }
     
     await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
@@ -1172,7 +1195,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   } catch (err) { console.log("Erro no Say:", err.message); }
   return;
 }
-
 // =======================
 // COMANDO: /warn (NOVO)
 // =======================
