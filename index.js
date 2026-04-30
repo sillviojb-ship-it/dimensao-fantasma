@@ -1065,7 +1065,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
     }
   }
 
-// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL ABSOLUTA] ---
+// --- [COMANDO: /SAY SUPREMO - AJUSTADO PARA HTML] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1136,7 +1136,10 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     let fEnts = ents.filter(e => e.offset >= cmdL).map(e => ({ ...e, offset: e.offset - cmdL })).filter(e => e.offset < fTxt.length);
 
     const body = { 
-      chat_id: ctx.chat.id, text: fTxt, entities: fEnts.length > 0 ? fEnts : undefined, 
+      chat_id: ctx.chat.id, 
+      text: fTxt, 
+      entities: fEnts.length > 0 ? fEnts : undefined, 
+      parse_mode: 'HTML', // <--- AJUSTE: FORÇANDO RENDERIZAÇÃO
       reply_to_message_id: m.reply_to_message?.message_id, 
       reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined, 
       show_above_text: true, expand_media_caption: true 
@@ -1147,7 +1150,12 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     else if (m.video || m.animation) { endP = m.video ? "sendVideo" : "sendAnimation"; body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id; }
     else if (m.audio || m.voice) { endP = m.audio ? "sendAudio" : "sendVoice"; body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id; }
     
-    if (endP !== "sendMessage") { body.caption = body.text; body.caption_entities = body.entities; delete body.text; delete body.entities; }
+    if (endP !== "sendMessage") { 
+      body.caption = body.text; 
+      body.caption_entities = body.entities; 
+      delete body.text; 
+      delete body.entities; 
+    }
     
     await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
