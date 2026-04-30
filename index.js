@@ -1065,7 +1065,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
     }
   }
 
-// --- [COMANDO SAY SUPREMO: AUTO-DETECÇÃO DE EMOJI PREMIUM NOS BOTÕES] ---
+// --- [O VERBO SUPREMO: VERSÃO DEFINITIVA DIMENSÃO FANTASMA] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1073,6 +1073,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const cmdL = space === -1 ? ori.length : space + 1;
     let clean = ori.slice(cmdL);
     
+    // Alvo das tags
     const u = m.reply_to_message ? m.reply_to_message.from : m.from;
     const now = new Date();
     const fullN = `${u.first_name || ""} ${u.last_name || ""}`.trim();
@@ -1081,28 +1082,24 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const tags = {
       '{ID}': u.id, '{id}': u.id,
       '{NAME}': u.first_name || "", '{name}': u.first_name || "",
-      '{FIRST}': u.first_name || "", '{first}': u.first_name || "",
-      '{SURNAME}': u.last_name || "", '{surname}': u.last_name || "",
       '{NAMESURNAME}': fullN, '{namesurname}': fullN,
-      '{USERNAME}': u.username ? `@${u.username}` : "n/a", '{username}': u.username ? `@${u.username}` : "n/a",
       '{MENTION}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`, '{mention}': `<a href='tg://user?id=${u.id}'>${u.first_name}</a>`,
-      '{GROUPNAME}': ctx.chat.title || "", '{groupname}': ctx.chat.title || "",
       '{DATE}': now.toLocaleDateString("pt-BR"), '{date}': now.toLocaleDateString("pt-BR"),
       '{TIME}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }), '{time}': now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       '{RULES}': rulesL, '{rules}': rulesL
     };
 
+    // Aplica as tags
     Object.keys(tags).forEach(t => { clean = clean.split(t).join(tags[t]); });
 
     let buttons = [];
     const styles = { r: "danger", g: "success", p: "primary", s: "secondary" };
     const ents = m.entities || m.caption_entities || [];
 
-    // --- [MOTOR DE BUSCA DE EMOJI PREMIUM NO TECLADO] ---
+    // --- FUNÇÃO PARA PEGAR EMOJI PREMIUM DO TECLADO ---
     const getEmojiFromText = (targetText) => {
       const offsetInOriginal = ori.indexOf(targetText);
       if (offsetInOriginal === -1) return null;
-      // Procura uma entidade de emoji premium que esteja "dentro" do texto do botão
       const found = ents.find(e => 
         e.type === 'custom_emoji' && 
         e.offset >= offsetInOriginal && 
@@ -1111,6 +1108,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       return found ? found.custom_emoji_id : null;
     };
 
+    // PROCESSADOR DE BOTÕES
     const lines = clean.split('\n');
     lines.forEach(line => {
       const row = [];
@@ -1123,45 +1121,49 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
         let btn = { text: label };
         let finalUrl = url.split(']')[0].replace(/[()]/g, '').trim();
 
-        // Tenta pegar o ID do emoji premium automaticamente do que você digitou
+        // Detecta Emoji Premium no Teclado
         const autoEmojiId = getEmojiFromText(label);
         if (autoEmojiId) {
           btn.icon_custom_emoji_id = autoEmojiId;
-          // Limpa o caractere visual do emoji para não ficar duplicado no botão
           btn.text = label.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim();
         }
 
+        // Alert / Popup
         if (finalUrl.startsWith("alert:") || finalUrl.startsWith("popup:")) {
           const msg = finalUrl.replace(/alert:|popup:/, "").trim();
           const cb = `alert${finalUrl.startsWith("alert:") ? "_AL_" : "_PP_"}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
           btn.callback_data = cb;
           if (redis) redis.set(`alert_msg:${cb}`, msg, 'EX', 3600);
-        } else { btn.url = finalUrl; }
-        
+        } else {
+          btn.url = finalUrl;
+        }
         if (st) btn.style = styles[st] || "primary";
         return btn;
       };
 
       while ((match = bRegex.exec(line)) !== null) row.push(processBtn(match[2], match[3], match[1]));
       while ((match = rRegex.exec(line)) !== null) row.push(processBtn(match[1], match[3], match[2]));
-      
       if (row.length > 0) buttons.push(row);
     });
 
     const finalText = clean.replace(/\{\[(?:#[rgps] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
     
+    // --- LIMPEZA DE DNA (RECALCULO DE ENTIDADES) ---
     let fEnts = ents.filter(e => e.offset >= cmdL)
-                   .map(e => {
-                     const { user, ...rest } = e; 
-                     return { ...rest, offset: e.offset - cmdL };
-                   })
-                   .filter(e => e.offset < finalText.length);
+      .map(e => {
+        const { user, ...rest } = e;
+        return { ...rest, offset: e.offset - cmdL };
+      })
+      .filter(e => e.offset < finalText.length);
 
     const body = { 
-      chat_id: ctx.chat.id, text: finalText, entities: fEnts,
+      chat_id: ctx.chat.id, 
+      text: finalText, 
+      entities: fEnts,
       reply_to_message_id: m.reply_to_message?.message_id, 
       reply_markup: { inline_keyboard: buttons }, 
-      show_caption_above_media: true, expand_media_caption: true
+      show_above_text: true, 
+      expand_media_caption: true
     };
 
     if (finalText.includes("<") && finalText.includes(">")) body.parse_mode = 'HTML';
@@ -1184,7 +1186,9 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     });
 
     await ctx.deleteMessage().catch(() => {});
-  } catch (err) { console.log("Erro Say Supremo:", err.message); }
+  } catch (err) {
+    console.log("Erro Say Supremo:", err.message);
+  }
   return;
 }
 
