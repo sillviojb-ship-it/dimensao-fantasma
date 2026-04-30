@@ -1065,7 +1065,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
     }
   }
 
-// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL INTEGRADA] ---
+// --- [COMANDO SAY: MANIFESTAÇÃO DO CEIFADOR - VERSÃO SUPREMA] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1095,16 +1095,18 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       '{RULES}': rulesL, '{rules}': rulesL
     };
 
+    // Substituição global de tags
     Object.keys(tags).forEach(t => { clean = clean.split(t).join(tags[t]); });
 
     let btns = [];
     const styles = { r: "danger", g: "success", p: "primary" };
     const ents = m.entities || m.caption_entities || [];
 
+    // --- FUNÇÃO DNA: CAPTURA EMOJI PREMIUM DO TECLADO ---
     const getE = (txtBtn) => {
       const offOriginal = ori.indexOf(txtBtn);
       if (offOriginal === -1) return null;
-      const entity = ents.find(e => e.type === "custom_emoji" && e.offset >= offOriginal && e.offset < offOriginal + txtBtn.length);
+      const entity = ents.find(e => e.type === "custom_emoji" && e.offset >= offOriginal && offOriginal < e.offset + e.length);
       return entity ? entity.custom_emoji_id : null;
     };
 
@@ -1122,6 +1124,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
           b.icon_custom_emoji_id = eId; 
           b.text = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim(); 
         }
+        // Tratamento de Alertas e Pop-ups
         if (url.startsWith("alert:") || url.startsWith("popup:")) {
           const isFull = url.startsWith("alert:");
           const msg = url.replace(/alert:|popup:/, "").trim();
@@ -1143,7 +1146,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     let fEnts = ents.filter(e => e.offset >= cmdL).map(e => ({ ...e, offset: e.offset - cmdL })).filter(e => e.offset < fTxt.length);
 
     const body = { 
-      chat_id: ctx.chat.id, text: fTxt, entities: fEnts.length > 0 ? fEnts : undefined, parse_mode: 'HTML',
+      chat_id: ctx.chat.id, text: fTxt, entities: fEnts, parse_mode: 'HTML',
       reply_to_message_id: m.reply_to_message?.message_id, 
       reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined, 
       show_above_text: true, expand_media_caption: true 
@@ -1163,7 +1166,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   } catch (err) { console.log("Erro na Manifestação:", err.message); }
   return;
 }
-
 // =======================
 // COMANDO: /warn (NOVO)
 // =======================
