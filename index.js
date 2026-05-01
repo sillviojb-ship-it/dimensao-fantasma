@@ -128,15 +128,19 @@ bot.on("callback_query", async (ctx) => {
 
     // --- MOTOR DE ALERTAS DO /SAY SUPREMO ---
   if (data.startsWith("alert_")) {
-    if (!redis) return ctx.answerCbQuery("⚠️ Erro.", { show_alert: true });
-    const alertMsg = await redis.get(`alert_msg:${data}`) || "💀 Expirado.";
+    if (!redis) return ctx.answerCbQuery("⚠️ Erro: Redis offline.", { show_alert: true });
+    const alertMsg = await redis.get(`alert_msg:${data}`) || "💀 Mensagem expirada.";
     
-    // Se o código for _AL_, ele faz o Pop-up (meio da tela)
-    // Se o código for _PP_, ele faz o Alerta discreto (topo)
-    const isPopup = data.includes("_AL_"); 
+    // A LÓGICA AGORA ESTÁ 100% CORRETA:
+    // Se no seu comando você escreveu 'popup:', o código gerou _PP_
+    // Se no seu comando você escreveu 'alert:', o código gerou _AL_
+    
+    // Queremos que POPUP (contém _PP_) seja show_alert: true (meio da tela)
+    // Queremos que ALERT (contém _AL_) seja show_alert: false (topo da tela)
+    
+    const isPopup = data.includes("_PP_"); 
     return ctx.answerCbQuery(alertMsg, { show_alert: isPopup });
   }
-
 
   await ctx.answerCbQuery().catch(() => {});
   // ... resto dos seus ifs (menu_logs, etc)
