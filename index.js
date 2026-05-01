@@ -102,6 +102,30 @@ bot.on("callback_query", async (ctx) => {
   const data = ctx.callbackQuery.data;
   if (!data) return;
 
+  // --- MÓDULO DE DELEÇÃO E CÓPIA ---
+  if (data === "del_msg") {
+    return ctx.deleteMessage().catch(() => {});
+  }
+  
+  if (data.startsWith("copy_")) {
+    const txt = Buffer.from(data.replace("copy_", ""), 'base64').toString();
+    return ctx.answerCbQuery(txt, { show_alert: true });
+  }
+
+  // --- MENU DE LIMPEZA (ESBOÇO) ---
+  if (data === "menu_limpeza") {
+    return ctx.editMessageText(`🧹 <b>Sistema de Limpeza</b>\n\nSelecione o que deseja purificar:`, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🤖 Comandos Admin", callback_data: "limpeza_admin" }],
+          [{ text: "👥 Comandos Usuários", callback_data: "limpeza_user" }],
+          [{ text: "⬅️ Voltar", callback_data: "back_start" }]
+        ]
+      }
+    });
+  }
+
   // --- MOTOR DE ALERTAS DO /SAY SUPREMO ---
   if (data.startsWith("alert_")) {
     if (!redis) return ctx.answerCbQuery("⚠️ Erro: Redis offline.", { show_alert: true });
