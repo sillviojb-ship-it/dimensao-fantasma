@@ -110,37 +110,89 @@ bot.on("callback_query", async (ctx) => {
     return ctx.answerCbQuery(txt, { show_alert: true });
   }
 
-    // --- MÓDULO DE LIMPEZA E AÇÕES ---
-  if (data === "menu_limpeza") {
-    await ctx.editMessageText(`🧹 <b>Sistema de Limpeza</b>\n\nSelecione o que deseja purificar:`, {
-      parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "🤖 Limpar 50 Admins", callback_data: "limpeza_admin" }],
-          [{ text: "👥 Limpar 50 Users", callback_data: "limpeza_user" }],
-          [{ text: "⬅️ Voltar", callback_data: "back_start" }]
-        ]
-      }
-    });
-    return ctx.answerCbQuery(); // Finaliza o carregamento
-  }
+    // ================================
+// MENU LIMPEZA (NOVO - CEIFADOR)
+// ================================
+if (data.startsWith("cfg_clean_")) {
+  const gId = data.replace("cfg_clean_", "");
 
-  if (data === "limpeza_admin" || data === "limpeza_user") {
-    const limit = 50;
-    let count = 0;
-    const chatId = ctx.chat.id;
-    const startId = ctx.callbackQuery.message.message_id;
+  const adm = await redis.get(`clean:admin:${gId}`) || "off";
+  const usr = await redis.get(`clean:user:${gId}`) || "off";
 
-    // Tenta apagar, se não conseguir, apenas pula
-    for (let i = 0; i < limit; i++) {
-      try {
-        await ctx.telegram.deleteMessage(chatId, startId - i);
-        count++;
-      } catch (e) {}
+  await ctx.editMessageText(`🧹 <b>SISTEMA DE LIMPEZA</b>
+
+Configure quais comandos devem ser apagados automaticamente no território.
+
+🛡️ Admins: ${adm === "on" ? "🟢 Ativo" : "🔴 Desligado"}
+👥 Usuários: ${usr === "on" ? "🟢 Ativo" : "🔴 Desligado"}`, {
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "🛡️ Configurar Admins", callback_data: `clean_admin_${gId}` },
+          { text: "👥 Configurar Usuários", callback_data: `clean_user_${gId}` }
+        ],
+        [{ text: "⬅️ Voltar", callback_data: `mod_group_${gId}` }]
+      ]
     }
-    // Resposta final que tira o loading
-    return ctx.answerCbQuery(`🧹 ${count} mensagens purificadas!`, { show_alert: true });
-  }
+  });
+
+  return ctx.answerCbQuery();
+}
+
+// ================================
+// SUBMENU ADMIN / USER
+// ================================
+if (data.startsWith("clean_admin_") || data.startsWith("clean_user_")) {
+  const isAdminMenu = data.startsWith("clean_admin_");
+  const gId = data.replace(isAdminMenu ? "clean_admin_" : "clean_user_", "");
+
+  const key = isAdminMenu ? `clean:admin:${gId}` : `clean:user:${gId}`;
+  const status = await redis.get(key) || "off";
+
+  await ctx.editMessageText(`⚙️ <b>CONFIGURAÇÃO DE COMANDOS</b>
+
+${isAdminMenu ? "🛡️ Admins" : "👥 Usuários"}
+
+Status atual: ${status === "on" ? "🟢 Ativo" : "🔴 Desligado"}
+
+Ative para apagar automaticamente mensagens de comando (/ ! .)`, {
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "🟢 Ativar", callback_data: `clean_on_${isAdminMenu ? "admin" : "user"}_${gId}` },
+          { text: "🔴 Desativar", callback_data: `clean_off_${isAdminMenu ? "admin" : "user"}_${gId}` }
+        ],
+        [{ text: "⬅️ Voltar", callback_data: `cfg_clean_${gId}` }]
+      ]
+    }
+  });
+
+  return ctx.answerCbQuery();
+}
+
+// ================================
+// ATIVAR / DESATIVAR
+// ================================
+if (data.startsWith("clean_on_") || data.startsWith("clean_off_")) {
+  const parts = data.split("_");
+  const action = parts[1]; // on/off
+  const type = parts[2];   // admin/user
+  const gId = parts[3];
+
+  const key = `clean:${type}:${gId}`;
+
+  await redis.set(key, action === "on" ? "on" : "off");
+
+  await ctx.answerCbQuery("Configuração atualizada");
+
+  return ctx.editMessageReplyMarkup({
+    inline_keyboard: [
+      [{ text: "🔄 Atualizar", callback_data: `cfg_clean_${gId}` }]
+    ]
+  });
+}
 
   // --- 3. MOTOR DE ALERTAS DO /SAY SUPREMO ---
   if (data.startsWith("alert_")) {
@@ -801,6 +853,27 @@ bot.command("dellog", async (ctx) => {
 bot.on(['text', 'caption', 'photo', 'video'], async (ctx) => {
   if (!ctx.message || ctx.message.from?.is_bot) return;
  const m = ctx.message;
+ 
+ // ================================
+// AUTO LIMPEZA DE COMANDOS
+// ================================
+if (redis && ctx.chat.type !== "private") {
+  const text = ctx.message.text || ctx.message.caption || "";
+
+  if (/^[\/!.]/.test(text)) {
+    const isAdm = await isAdmin(ctx);
+
+    const key = isAdm
+      ? `clean:admin:${ctx.chat.id}`
+      : `clean:user:${ctx.chat.id}`;
+
+    const status = await redis.get(key);
+
+    if (status === "on") {
+      await ctx.deleteMessage().catch(() => {});
+    }
+  }
+}
   // --- CACHE DE USUÁRIOS (ID + USERNAME) ---
 if (redis && m.from) {
   const userId = m.from.id;
