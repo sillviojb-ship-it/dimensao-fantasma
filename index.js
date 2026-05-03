@@ -584,6 +584,33 @@ if (data.startsWith("links_on_") || data.startsWith("links_off_")) {
   });
 }
 
+// ================================
+// CONFIG PUNIÇÃO ANTI-LINK
+// ================================
+if (data.startsWith("links_mode_")) {
+  if (!redis) {
+    return ctx.answerCbQuery("⚠️ Erro de memória", { show_alert: true });
+  }
+
+  const [, , gId, mode] = data.split("_");
+
+  const modosValidos = ["delete", "warn", "mute", "ban"];
+
+  if (!modosValidos.includes(mode)) {
+    return ctx.answerCbQuery("❌ Modo inválido");
+  }
+
+  await redis.set(`mode:links:${gId}`, mode);
+
+  await ctx.answerCbQuery(`⚙️ Modo definido: ${mode}`);
+
+  return ctx.editMessageReplyMarkup({
+    inline_keyboard: [
+      [{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]
+    ]
+  });
+}
+
   // --- MENU: AGENTE IA ENTERPRISE ---
   if (data === "menu_ai") {
     await ctx.editMessageText(`${c} <b>🧛 AGENTE IA ENTERPRISE</b>\n\n<i>O Ceifador está processando frequências de inteligência superior...</i>\n\nAs sombras estão aprendendo a analisar almas e automatizar o julgamento no território.\n\n🛡️ <b>Status:</b> Em desenvolvimento nas câmaras do submundo.`, {
