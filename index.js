@@ -558,6 +558,32 @@ Controle o bloqueio automático de links no território.
   return ctx.answerCbQuery();
 }
 
+// ================================
+// CONTROLE ANTI-LINK (ON/OFF)
+// ================================
+if (data.startsWith("links_on_") || data.startsWith("links_off_")) {
+  if (!redis) {
+    return ctx.answerCbQuery("⚠️ Memória indisponível", { show_alert: true });
+  }
+
+  const parts = data.split("_");
+  const action = parts[1]; // on ou off
+  const gId = parts[2];
+
+  await redis.set(`stat:links:${gId}`, action === "on" ? "on" : "off");
+
+  await ctx.answerCbQuery(
+    action === "on" ? "🟢 Anti-Link ativado" : "🔴 Anti-Link desativado"
+  );
+
+  // Atualiza a tela automaticamente
+  return ctx.editMessageReplyMarkup({
+    inline_keyboard: [
+      [{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]
+    ]
+  });
+}
+
   // --- MENU: AGENTE IA ENTERPRISE ---
   if (data === "menu_ai") {
     await ctx.editMessageText(`${c} <b>🧛 AGENTE IA ENTERPRISE</b>\n\n<i>O Ceifador está processando frequências de inteligência superior...</i>\n\nAs sombras estão aprendendo a analisar almas e automatizar o julgamento no território.\n\n🛡️ <b>Status:</b> Em desenvolvimento nas câmaras do submundo.`, {
