@@ -686,7 +686,7 @@ if (data.startsWith("w_clear_")) {
         inline_keyboard: [
           [{ text: `${await st("welcome")} Boas-Vindas`, callback_data: `cfg_welcome_${gId}` }, { text: `${await st("notes")} Notas (#)`, callback_data: `cfg_notes_${gId}` }],
           [{ text: `${await st("filters")} Filtros`, callback_data: `cfg_filters_${gId}` }, { text: `${await st("links")} Anti-Link`, callback_data: `cfg_links_${gId}` }],
-          [{ text: `${await st("clean")} Limpeza`, callback_data: `cfg_clean_${gId}` }],
+          [{ text: `${await st("clean")} Limpeza`, callback_data: `menu_limpeza` }],
           [{ text: "⬅️ Voltar ao Início", callback_data: "menu_mod" }]
         ]
       }
