@@ -1121,11 +1121,16 @@ if (redis && ctx.chat.type !== "private") {
     const uId = m.from.id;
     const key = `warns:${chatId}:${uId}`;
 
-    let w = parseInt(await redis.get(key)) || 0;
-    w++;
+    const mode = (await redis.get(`mode:links:${chatId}`)) || "warn";
 
-    await redis.set(key, w);
+if (mode === "delete") {
+  return; // só apagou e para aqui
+}
 
+let w = parseInt(await redis.get(key)) || 0;
+w++;
+await redis.set(key, w);
+  
     const info = formatUser(m.from);
     const limit = parseInt(await redis.get(`warn:limit:${chatId}`)) || 4;
     const action = (await redis.get(`warn:action:${chatId}`)) || "ban";
