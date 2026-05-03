@@ -1077,7 +1077,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
     let l = `${c} <b>O Ceifador revelou os responsáveis por este território...</b>\n\n`;
     adms.forEach(a => { if (!a.user.is_bot) l += `• ${formatUser(a.user)}\n\n`; });
     await ctx.reply(l, { parse_mode: 'HTML' });
-    return ctx.menu_aieteMessage().catch(() => {});
+  return ctx.deleteMessage().catch(() => {});
   }
 
   // BLOQUEIO
