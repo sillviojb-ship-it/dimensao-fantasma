@@ -102,56 +102,53 @@ bot.on("callback_query", async (ctx) => {
   const data = ctx.callbackQuery.data;
   if (!data) return;
 
-  // --- MÓDULO DE DELEÇÃO E CÓPIA ---
-  if (data === "del_msg") {
-    return ctx.deleteMessage().catch(() => {});
-  }
+  // --- 1. MÓDULO DE DELEÇÃO E CÓPIA ---
+  if (data === "del_msg") return ctx.deleteMessage().catch(() => {});
   
   if (data.startsWith("copy_")) {
     const txt = Buffer.from(data.replace("copy_", ""), 'base64').toString();
     return ctx.answerCbQuery(txt, { show_alert: true });
   }
 
-    // --- MÓDULO DE LIMPEZA (MENU E AÇÕES) ---
+  // --- 2. MÓDULO DE LIMPEZA (MENU E AÇÃO) ---
   if (data === "menu_limpeza") {
     return ctx.editMessageText(`🧹 <b>Sistema de Limpeza</b>\n\nSelecione o que deseja purificar:`, {
       parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: [
-          [{ text: "🤖 Limpar Comandos Admin", callback_data: "limpeza_admin" }],
-          [{ text: "👥 Limpar Mensagens User", callback_data: "limpeza_user" }],
+          [{ text: "🤖 Limpar 50 Admins", callback_data: "limpeza_admin" }],
+          [{ text: "👥 Limpar 50 Users", callback_data: "limpeza_user" }],
           [{ text: "⬅️ Voltar", callback_data: "back_start" }]
         ]
       }
     });
   }
 
-  if (data === "limpeza_admin") {
-    return ctx.answerCbQuery("⚙️ Função de limpeza de Admin ativada.", { show_alert: true });
+  // A LÓGICA DA VASSOURA (O QUE REALMENTE APAGA)
+  if (data === "limpeza_admin" || data === "limpeza_user") {
+    const limit = 50;
+    let count = 0;
+    const chatId = ctx.chat.id;
+    const startId = ctx.callbackQuery.message.message_id;
+
+    for (let i = 0; i < limit; i++) {
+      try {
+        await ctx.telegram.deleteMessage(chatId, startId - i);
+        count++;
+      } catch (e) {}
+    }
+    return ctx.answerCbQuery(`🧹 ${count} mensagens purificadas!`);
   }
 
-  if (data === "limpeza_user") {
-    return ctx.answerCbQuery("⚙️ Função de limpeza de Usuários ativada.", { show_alert: true });
-  }
-
-    // --- MOTOR DE ALERTAS DO /SAY SUPREMO ---
+  // --- 3. MOTOR DE ALERTAS DO /SAY SUPREMO ---
   if (data.startsWith("alert_")) {
-    if (!redis) return ctx.answerCbQuery("⚠️ Erro: Redis offline.", { show_alert: true });
-    const alertMsg = await redis.get(`alert_msg:${data}`) || "💀 Mensagem expirada.";
-    
-    // A LÓGICA AGORA ESTÁ 100% CORRETA:
-    // Se no seu comando você escreveu 'popup:', o código gerou _PP_
-    // Se no seu comando você escreveu 'alert:', o código gerou _AL_
-    
-    // Queremos que POPUP (contém _PP_) seja show_alert: true (meio da tela)
-    // Queremos que ALERT (contém _AL_) seja show_alert: false (topo da tela)
-    
+    if (!redis) return ctx.answerCbQuery("⚠️ Erro.", { show_alert: true });
+    const alertMsg = await redis.get(`alert_msg:${data}`) || "💀 Expirado.";
     const isPopup = data.includes("_PP_"); 
     return ctx.answerCbQuery(alertMsg, { show_alert: isPopup });
   }
 
-  await ctx.answerCbQuery().catch(() => {});
-  // ... resto dos seus ifs (menu_logs, etc)
+  // ... (o restante dos seus outros IFs de Logs, Warn, etc, continuam aqui abaixo)
 
   // --- MOTOR DO BOTÃO DE JULGAMENTO (RESOLVIDO) ---
   if (data === "report_julgar") {
