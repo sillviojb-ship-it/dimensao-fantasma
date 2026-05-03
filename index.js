@@ -1153,13 +1153,20 @@ if (redis && m.from) {
 // ANTI-LINK (CONTROLADO POR MENU)
 // ================================
 
+await ctx.deleteMessage().catch((e) => {
+  console.log("ERRO AO DELETAR:", e);
+});
+
 const mode = (await redis.get(`mode:links:${chatId}`)) || "warn";
 const duration = parseInt(await redis.get(`time:links:${chatId}`)) || 0;
 
 console.log("MODE LINKS:", mode);
 
+// ================================
+// DELETE (PRIORIDADE TOTAL)
+// ================================
 if (mode === "delete") {
-  return; // só apaga
+  return; // só apagou e encerra
 }
 
 const uId = m.from.id;
