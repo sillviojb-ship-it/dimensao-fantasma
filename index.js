@@ -1122,7 +1122,7 @@ if (redis && ctx.chat.type !== "private") {
     const key = `warns:${chatId}:${uId}`;
 
     const mode = (await redis.get(`mode:links:${chatId}`)) || "warn";
-
+console.log("MODE LINKS:", mode);
 if (mode === "delete") {
   return; // só apagou e para aqui
 }
