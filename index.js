@@ -518,6 +518,46 @@ if (data.startsWith("w_del_")) {
   } catch (e) { await ctx.answerCbQuery("❌ Erro ao deletar."); }
 }
 
+// ================================
+// MENU ANTI-LINK (CEIFADOR)
+// ================================
+if (data.startsWith("cfg_links_")) {
+  if (!redis) {
+    return ctx.answerCbQuery("⚠️ Memória indisponível", { show_alert: true });
+  }
+
+  const gId = data.replace("cfg_links_", "");
+
+  const status = (await redis.get(`stat:links:${gId}`)) === "on"
+    ? "🟢 ATIVO"
+    : "🔴 DESLIGADO";
+
+  await ctx.editMessageText(`${c} <b>SISTEMA ANTI-LINK</b>
+
+Controle o bloqueio automático de links no território.
+
+📊 Status: ${status}`, {
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "🟢 Ativar", callback_data: `links_on_${gId}` },
+          { text: "🔴 Desativar", callback_data: `links_off_${gId}` }
+        ],
+        [
+          { text: "➕ Gerenciar Whitelist", callback_data: `links_white_${gId}` }
+        ],
+        [
+          { text: "⬅️ Voltar", callback_data: `mod_group_${gId}` },
+          { text: "🏠 Início", callback_data: "back_start" }
+        ]
+      ]
+    }
+  });
+
+  return ctx.answerCbQuery();
+}
+
   // --- MENU: AGENTE IA ENTERPRISE ---
   if (data === "menu_ai") {
     await ctx.editMessageText(`${c} <b>🧛 AGENTE IA ENTERPRISE</b>\n\n<i>O Ceifador está processando frequências de inteligência superior...</i>\n\nAs sombras estão aprendendo a analisar almas e automatizar o julgamento no território.\n\n🛡️ <b>Status:</b> Em desenvolvimento nas câmaras do submundo.`, {
@@ -1011,7 +1051,9 @@ if (redis && m.from) {
   }
 
 // LINKS (ANTI-LINK COM WARN)
-if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
+if (redis && ctx.chat.type !== "private") {
+  const anti = await redis.get(`stat:links:${chatId}`);
+  if (anti === "on" && text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
       const linksSubjugados = await redis.smembers("whitelist_links") || [];
     const isSoberano = whitelist.some(w => text.includes(w)) || linksSubjugados.some(l => text.includes(l));
 
@@ -1061,6 +1103,7 @@ if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
 
     return;
   }
+}
 }
 
     // --- HELP OBLITERAÇÃO (DIMENSÃO FANTASMA) ---
