@@ -110,9 +110,9 @@ bot.on("callback_query", async (ctx) => {
     return ctx.answerCbQuery(txt, { show_alert: true });
   }
 
-  // --- 2. MÓDULO DE LIMPEZA (MENU E AÇÃO) ---
+    // --- MÓDULO DE LIMPEZA E AÇÕES ---
   if (data === "menu_limpeza") {
-    return ctx.editMessageText(`🧹 <b>Sistema de Limpeza</b>\n\nSelecione o que deseja purificar:`, {
+    await ctx.editMessageText(`🧹 <b>Sistema de Limpeza</b>\n\nSelecione o que deseja purificar:`, {
       parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: [
@@ -122,22 +122,24 @@ bot.on("callback_query", async (ctx) => {
         ]
       }
     });
+    return ctx.answerCbQuery(); // Finaliza o carregamento
   }
 
-  // A LÓGICA DA VASSOURA (O QUE REALMENTE APAGA)
   if (data === "limpeza_admin" || data === "limpeza_user") {
     const limit = 50;
     let count = 0;
     const chatId = ctx.chat.id;
     const startId = ctx.callbackQuery.message.message_id;
 
+    // Tenta apagar, se não conseguir, apenas pula
     for (let i = 0; i < limit; i++) {
       try {
         await ctx.telegram.deleteMessage(chatId, startId - i);
         count++;
       } catch (e) {}
     }
-    return ctx.answerCbQuery(`🧹 ${count} mensagens purificadas!`);
+    // Resposta final que tira o loading
+    return ctx.answerCbQuery(`🧹 ${count} mensagens purificadas!`, { show_alert: true });
   }
 
   // --- 3. MOTOR DE ALERTAS DO /SAY SUPREMO ---
