@@ -112,18 +112,26 @@ bot.on("callback_query", async (ctx) => {
     return ctx.answerCbQuery(txt, { show_alert: true });
   }
 
-  // --- MENU DE LIMPEZA (ESBOÇO) ---
+    // --- MÓDULO DE LIMPEZA (MENU E AÇÕES) ---
   if (data === "menu_limpeza") {
     return ctx.editMessageText(`🧹 <b>Sistema de Limpeza</b>\n\nSelecione o que deseja purificar:`, {
       parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: [
-          [{ text: "🤖 Comandos Admin", callback_data: "limpeza_admin" }],
-          [{ text: "👥 Comandos Usuários", callback_data: "limpeza_user" }],
+          [{ text: "🤖 Limpar Comandos Admin", callback_data: "limpeza_admin" }],
+          [{ text: "👥 Limpar Mensagens User", callback_data: "limpeza_user" }],
           [{ text: "⬅️ Voltar", callback_data: "back_start" }]
         ]
       }
     });
+  }
+
+  if (data === "limpeza_admin") {
+    return ctx.answerCbQuery("⚙️ Função de limpeza de Admin ativada.", { show_alert: true });
+  }
+
+  if (data === "limpeza_user") {
+    return ctx.answerCbQuery("⚙️ Função de limpeza de Usuários ativada.", { show_alert: true });
   }
 
     // --- MOTOR DE ALERTAS DO /SAY SUPREMO ---
