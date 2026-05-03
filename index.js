@@ -1103,67 +1103,75 @@ if (redis && m.from) {
     }
   }
 
-// LINKS (ANTI-LINK COM WARN)
+// LINKS (ANTI-LINK COM MODOS)
 if (redis && ctx.chat.type !== "private") {
   const anti = await redis.get(`stat:links:${chatId}`);
+
   if (anti === "on" && text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
-      const linksSubjugados = await redis.smembers("whitelist_links") || [];
+
+    const linksSubjugados = await redis.smembers("whitelist_links") || [];
     const isSoberano = whitelist.some(w => text.includes(w)) || linksSubjugados.some(l => text.includes(l));
 
     if (!isSoberano) {
 
-    await ctx.deleteMessage().catch(() => {});
+      await ctx.deleteMessage().catch(() => {});
 
-    if (!redis) {
-      return ctx.reply(`${c} <b>O Ceifador rejeitou esta alma...</b>\n\nLinks não autorizados não são permitidos.`, { parse_mode: 'HTML' });
-    }
+      const uId = m.from.id;
+      const key = `warns:${chatId}:${uId}`;
+      const info = formatUser(m.from);
 
-    const uId = m.from.id;
-    const key = `warns:${chatId}:${uId}`;
+      const mode = (await redis.get(`mode:links:${chatId}`)) || "warn";
 
-    const mode = (await redis.get(`mode:links:${chatId}`)) || "warn";
-console.log("MODE LINKS:", mode);
-if (mode === "delete") {
-  return; // só apagou e para aqui
-}
+      // ========================
+      // MODO: DELETE
+      // ========================
+      if (mode === "delete") {
+        await sendLog(ctx, chatId, "ANTI-LINK", info, formatUser(ctx.from), "link apagado");
+        return;
+      }
 
-let w = parseInt(await redis.get(key)) || 0;
-w++;
-await redis.set(key, w);
-  
-    const info = formatUser(m.from);
-    const limit = parseInt(await redis.get(`warn:limit:${chatId}`)) || 4;
-    const action = (await redis.get(`warn:action:${chatId}`)) || "ban";
+      // ========================
+      // MODO: WARN
+      // ========================
+      let w = parseInt(await redis.get(key)) || 0;
+      w++;
+      await redis.set(key, w);
 
-    if (w < limit) {
-      await ctx.reply(`${c} <b>O Ceifador marcou esta alma por violar as regras...</b>\n\nUsuário:\n<b>${info}</b>\nMotivo: envio de link\nWarn: ${w}/${limit}`, {
-        parse_mode: 'HTML'
-      });
-    } else {
-      if (action === "ban") {
-        await ctx.telegram.banChatMember(chatId, uId);
-        await ctx.reply(`${c} <b>O Ceifador julgou esta alma...</b>\n\nEla ultrapassou os limites e foi banida.`, {
+      const limit = parseInt(await redis.get(`warn:limit:${chatId}`)) || 4;
+      const action = (await redis.get(`warn:action:${chatId}`)) || "ban";
+
+      if (w < limit) {
+        await ctx.reply(`${c} <b>O Ceifador marcou esta alma por violar as regras...</b>\n\nUsuário:\n<b>${info}</b>\nMotivo: envio de link\nWarn: ${w}/${limit}`, {
           parse_mode: 'HTML'
         });
       } else {
-        await ctx.telegram.restrictChatMember(chatId, uId, {
-          permissions: { can_send_messages: false }
-        });
-        await ctx.reply(`${c} <b>O Ceifador silenciou esta alma...</b>\n\nEla ultrapassou os limites.`, {
-          parse_mode: 'HTML'
-        });
+
+        // ========================
+        // PUNIÇÃO FINAL
+        // ========================
+        if (action === "ban") {
+          await ctx.telegram.banChatMember(chatId, uId);
+          await ctx.reply(`${c} <b>O Ceifador julgou esta alma...</b>\n\nEla ultrapassou os limites e foi banida.`, {
+            parse_mode: 'HTML'
+          });
+        } else {
+          await ctx.telegram.restrictChatMember(chatId, uId, {
+            permissions: { can_send_messages: false }
+          });
+          await ctx.reply(`${c} <b>O Ceifador silenciou esta alma...</b>\n\nEla ultrapassou os limites.`, {
+            parse_mode: 'HTML'
+          });
+        }
+
+        await redis.del(key);
       }
 
-      await redis.del(key);
+      await sendLog(ctx, chatId, "ANTI-LINK", info, formatUser(ctx.from), "envio de link");
+
+      return;
     }
-
-    await sendLog(ctx, chatId, "ANTI-LINK", info, formatUser(ctx.from), "envio de link");
-
-    return;
   }
 }
-}
-
     // --- HELP OBLITERAÇÃO (DIMENSÃO FANTASMA) ---
   if (text.startsWith("/help")) {
     const h = `${c} <b>👁️ O Ceifador revela seus poderes...</b>\n\n` +
