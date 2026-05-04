@@ -114,8 +114,8 @@ bot.command("start", async (ctx) => {
 bot.on("callback_query", async (ctx) => {
   const data = ctx.callbackQuery.data;
   if (!data) return;
-  
-  // --- 3. MOTOR DE ALERTAS DO /SAY SUPREMO ---
+
+  // --- 1. MÓDULO DE ALERTAS (SAY SUPREMO) - DEVE SER O PRIMEIRO ---
   if (data.startsWith("alert_")) {
     if (!redis) return ctx.answerCbQuery("⚠️ Erro.", { show_alert: true });
     const alertMsg = await redis.get(`alert_msg:${data}`) || "💀 Expirado.";
@@ -123,22 +123,24 @@ bot.on("callback_query", async (ctx) => {
     return ctx.answerCbQuery(alertMsg, { show_alert: isPopup });
   }
 
-  // ... (o restante dos seus outros IFs de Logs, Warn, etc, continuam aqui abaixo)
-
-
-  // --- 1. MÓDULO DE DELEÇÃO E CÓPIA ---
-  if (data === "del_msg") return ctx.deleteMessage().catch(() => {});
+  // --- 2. MÓDULO DE DELEÇÃO E CÓPIA ---
+  if (data === "del_msg") {
+    await ctx.deleteMessage().catch(() => {});
+    return ctx.answerCbQuery("🗑️ Mensagem removida.");
+  }
   
   if (data.startsWith("copy_")) {
     const txt = Buffer.from(data.replace("copy_", ""), 'base64').toString();
-    return ctx.answerCbQuery(txt, { show_alert: true });
+    // A CÓPIA AGORA É VIA MENSAGEM (MAIS FÁCIL PARA O USUÁRIO)
+    return ctx.reply(`<code>${txt}</code>`, { parse_mode: 'HTML' });
   }
 
-    // ================================
-// MENU LIMPEZA (NOVO - CEIFADOR)
-// ================================
-if (data.startsWith("cfg_clean_")) {
-  const gId = data.replace("cfg_clean_", "");
+  // --- 3. MÓDULO DE LIMPEZA ---
+  if (data === "menu_limpeza") {
+     // ... (seu código de menu_limpeza aqui)
+  }
+
+  // ... (restante do seu código)
 
   const adm = await redis.get(`clean:admin:${gId}`) || "off";
   const usr = await redis.get(`clean:user:${gId}`) || "off";
@@ -162,7 +164,6 @@ Configure quais comandos devem ser apagados automaticamente no território.
   });
 
   return ctx.answerCbQuery();
-}
 
 // ================================
 // SUBMENU ADMIN / USER
