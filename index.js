@@ -44,27 +44,24 @@ const sendLog = async (ctx, chatId, acao, alvo, admin, motivo) => {
   await ctx.telegram.sendMessage(logChannel, logMsg, { parse_mode: 'HTML' }).catch(() => {});
 };
 
-// --- FUNÇÃO AUXILIAR: LOCALIZADOR DE ALMAS (FINAL ESTÁVEL) ---
+// --- FUNÇÃO AUXILIAR: LOCALIZADOR DE ALMAS (FINAL COM CACHE) ---
 const getTarget = async (ctx) => {
-  if (!ctx.message) return null;
-
-  // --- PRIORIDADE 1: REPLY ---
   if (ctx.message.reply_to_message) {
     return ctx.message.reply_to_message.from;
   }
 
   const text = ctx.message.text || ctx.message.caption || "";
-  const args = text.trim().split(/\s+/);
+  const args = text.split(" ");
 
   if (args.length > 1) {
     const alvo = args[1];
 
-    // --- PRIORIDADE 2: ID DIRETO ---
+    // --- ID DIRETO ---
     if (/^\d+$/.test(alvo)) {
       return { id: Number(alvo), first_name: "ID: " + alvo };
     }
 
-    // --- PRIORIDADE 3: USERNAME ---
+    // --- USERNAME COM CACHE ---
     if (alvo.startsWith("@")) {
       const username = alvo.slice(1).toLowerCase();
 
@@ -75,17 +72,11 @@ const getTarget = async (ctx) => {
         }
       }
 
-      // --- NÃO ENCONTRADO NO CACHE ---
-      await ctx.reply(
-        `${c} <b>Alma não encontrada no registro.</b>\n\nPeça para o usuário enviar uma mensagem no grupo primeiro.\n\nDepois retorne… o Ceifador aguardará.`,
-        { parse_mode: "HTML" }
-      );
-
-      return null;
+      // fallback (caso não esteja no cache ainda)
+      return { id: alvo, first_name: alvo };
     }
   }
 
-  // --- NENHUM ALVO IDENTIFICADO ---
   return null;
 };
 
@@ -527,179 +518,6 @@ if (data.startsWith("w_del_")) {
   } catch (e) { await ctx.answerCbQuery("❌ Erro ao deletar."); }
 }
 
-// ================================
-// MENU ANTI-LINK (CEIFADOR PRO FINAL)
-// ================================
-if (data.startsWith("cfg_links_")) {
-  if (!redis) {
-    return ctx.answerCbQuery("⚠️ Memória indisponível", { show_alert: true });
-  }
-
-  const gId = data.replace("cfg_links_", "");
-
-  const isOn = (await redis.get(`stat:links:${gId}`)) === "on";
-  const mode = (await redis.get(`mode:links:${gId}`)) || "warn";
-  const time = (await redis.get(`time:links:${gId}`)) || "0";
-
-  const status = isOn ? "🟢 ATIVO" : "🔴 DESLIGADO";
-
-  const modeLabel = {
-    delete: "🗑 DELETE",
-    warn: "⚠️ WARN",
-    mute: "🔇 MUTE",
-    kick: "👢 KICK",
-    ban: "🚫 BAN"
-  }[mode] || "⚠️ WARN";
-
-  const timeLabel = time == "0" ? "♾️ Permanente" : `${time}s`;
-
-  const btn = (text, value) => mode === value ? `🟢 ${text}` : text;
-
-  await ctx.editMessageText(
-`${c} <b>SISTEMA ANTI-LINK</b>
-
-Controle o bloqueio automático de links no território.
-
-📊 Status: ${status}
-⚙️ Modo: ${modeLabel}
-⏱ Tempo: ${timeLabel}`,
-    {
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: [
-
-          [
-            { text: isOn ? "🟢 Ativado" : "🟢 Ativar", callback_data: `links_on_${gId}` },
-            { text: !isOn ? "🔴 Desativado" : "🔴 Desativar", callback_data: `links_off_${gId}` }
-          ],
-
-          [
-            { text: btn("🗑 Delete", "delete"), callback_data: `links_mode_${gId}_delete` },
-            { text: btn("⚠️ Warn", "warn"), callback_data: `links_mode_${gId}_warn` }
-          ],
-
-          [
-            { text: btn("🔇 Mute", "mute"), callback_data: `links_mode_${gId}_mute` },
-            { text: btn("👢 Kick", "kick"), callback_data: `links_mode_${gId}_kick` }
-          ],
-
-          [
-            { text: btn("🚫 Ban", "ban"), callback_data: `links_mode_${gId}_ban` }
-          ],
-
-          [
-            { text: "30s", callback_data: `links_time_${gId}_30` },
-            { text: "5min", callback_data: `links_time_${gId}_300` }
-          ],
-
-          [
-            { text: "1h", callback_data: `links_time_${gId}_3600` },
-            { text: "1d", callback_data: `links_time_${gId}_86400` }
-          ],
-
-          [
-            { text: "➕ Gerenciar Whitelist", callback_data: `links_white_${gId}` }
-          ],
-
-          [
-            { text: "⬅️ Voltar", callback_data: `mod_group_${gId}` },
-            { text: "🏠 Início", callback_data: "back_start" }
-          ]
-
-        ]
-      }
-    }
-  );
-
-  return ctx.answerCbQuery();
-}
-
-// ================================
-// ATIVAR / DESATIVAR
-// ================================
-if (data.startsWith("links_on_") || data.startsWith("links_off_")) {
-  const parts = data.split("_");
-  const action = parts[1];
-  const gId = parts[2];
-
-  await redis.set(`stat:links:${gId}`, action === "on" ? "on" : "off");
-
-  await ctx.answerCbQuery(
-    action === "on" ? "🟢 Anti-Link ativado" : "🔴 Anti-Link desativado"
-  );
-
-  return ctx.editMessageText("🔄 Atualizando...", {
-    reply_markup: {
-      inline_keyboard: [[{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]]
-    }
-  });
-}
-
-// ================================
-// CONFIG MODO
-// ================================
-if (data.startsWith("links_mode_")) {
-  const [, , gId, mode] = data.split("_");
-
-  const valid = ["delete", "warn", "mute", "kick", "ban"];
-  if (!valid.includes(mode)) {
-    return ctx.answerCbQuery("❌ Modo inválido");
-  }
-
-  await redis.set(`mode:links:${gId}`, mode);
-
-  await ctx.answerCbQuery(`⚙️ Modo definido: ${mode}`);
-
-  return ctx.editMessageText("🔄 Atualizando...", {
-    reply_markup: {
-      inline_keyboard: [[{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]]
-    }
-  });
-}
-
-// ================================
-// TEMPO
-// ================================
-if (data.startsWith("links_time_")) {
-  const [, , gId, time] = data.split("_");
-
-  await redis.set(`time:links:${gId}`, time);
-
-  await ctx.answerCbQuery("⏱ Tempo definido");
-
-  return ctx.editMessageText("🔄 Atualizando...", {
-    reply_markup: {
-      inline_keyboard: [[{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]]
-    }
-  });
-}
-
-// ================================
-// ADICIONAR NA BLACKLIST (FUNCIONANDO)
-// ================================
-if (data === "add_black") {
-
-  await redis.set(`wait_black:${ctx.from.id}`, "1", "EX", 120);
-
-  await ctx.editMessageText(`${c} <b>CONDENAÇÃO INICIADA</b>
-
-Envie agora:
-
-• ID da alma
-• ou encaminhe uma mensagem
-
-<i>O Ceifador aguarda...</i>`, {
-    parse_mode: "HTML",
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "❌ Cancelar", callback_data: "view_black" }]
-      ]
-    }
-  });
-
-  return ctx.answerCbQuery();
-}
-
   // --- MENU: AGENTE IA ENTERPRISE ---
   if (data === "menu_ai") {
     await ctx.editMessageText(`${c} <b>🧛 AGENTE IA ENTERPRISE</b>\n\n<i>O Ceifador está processando frequências de inteligência superior...</i>\n\nAs sombras estão aprendendo a analisar almas e automatizar o julgamento no território.\n\n🛡️ <b>Status:</b> Em desenvolvimento nas câmaras do submundo.`, {
@@ -920,7 +738,7 @@ if (data.startsWith("w_clear_")) {
         inline_keyboard: [
           [{ text: `${await st("welcome")} Boas-Vindas`, callback_data: `cfg_welcome_${gId}` }, { text: `${await st("notes")} Notas (#)`, callback_data: `cfg_notes_${gId}` }],
           [{ text: `${await st("filters")} Filtros`, callback_data: `cfg_filters_${gId}` }, { text: `${await st("links")} Anti-Link`, callback_data: `cfg_links_${gId}` }],
-          [{ text: `${await st("clean")} Limpeza`, callback_data: `cfg_clean_${gId}` }],
+          [{ text: `${await st("clean")} Limpeza`, callback_data: `menu_limpeza` }],
           [{ text: "⬅️ Voltar ao Início", callback_data: "menu_mod" }]
         ]
       }
@@ -1191,97 +1009,61 @@ if (redis && m.from) {
       return;
     }
   }
-  
-// ================================
-// ANTI-LINK (CORREÇÃO DEFINITIVA)
-// ================================
 
-if (redis && ctx.chat.type !== "private") {
+// LINKS (ANTI-LINK COM WARN)
+if (text.match(/(https?:\/\/|t\.me|telegram\.me)/i) && !isAdm) {
+      const linksSubjugados = await redis.smembers("whitelist_links") || [];
+    const isSoberano = whitelist.some(w => text.includes(w)) || linksSubjugados.some(l => text.includes(l));
 
-  const textMsg = (m.text || m.caption || "").toLowerCase();
+    if (!isSoberano) {
 
-  // SÓ EXECUTA SE TIVER LINK
-  if (/(https?:\/\/|t\.me|www\.)/i.test(textMsg)) {
+    await ctx.deleteMessage().catch(() => {});
 
-    const whitelist = await redis.smembers("whitelist_links") || [];
-    if (whitelist.some(w => textMsg.includes(w))) return;
-
-    if (isAdm) return;
-
-    const mode = (await redis.get(`mode:links:${chatId}`)) || "warn";
-    const duration = parseInt(await redis.get(`time:links:${chatId}`)) || 0;
+    if (!redis) {
+      return ctx.reply(`${c} <b>O Ceifador rejeitou esta alma...</b>\n\nLinks não autorizados não são permitidos.`, { parse_mode: 'HTML' });
+    }
 
     const uId = m.from.id;
+    const key = `warns:${chatId}:${uId}`;
+
+    let w = parseInt(await redis.get(key)) || 0;
+    w++;
+
+    await redis.set(key, w);
+
     const info = formatUser(m.from);
+    const limit = parseInt(await redis.get(`warn:limit:${chatId}`)) || 4;
+    const action = (await redis.get(`warn:action:${chatId}`)) || "ban";
 
-    // DELETE
-    if (mode === "delete") {
-      await ctx.deleteMessage().catch(() => {});
-    }
-
-    // WARN
-    else if (mode === "warn") {
-      await ctx.deleteMessage().catch(() => {});
-
-      const key = `warns:${chatId}:${uId}`;
-      let w = parseInt(await redis.get(key)) || 0;
-      w++;
-
-      await redis.set(key, w);
-
-      const limit = parseInt(await redis.get(`warn:limit:${chatId}`)) || 4;
-
-      if (w < limit) {
-        await ctx.reply(`${c} <b>O Ceifador marcou esta alma...</b>
-
-Usuário:
-<b>${info}</b>
-Motivo: envio de link
-Warn: ${w}/${limit}`, { parse_mode: 'HTML' });
+    if (w < limit) {
+      await ctx.reply(`${c} <b>O Ceifador marcou esta alma por violar as regras...</b>\n\nUsuário:\n<b>${info}</b>\nMotivo: envio de link\nWarn: ${w}/${limit}`, {
+        parse_mode: 'HTML'
+      });
+    } else {
+      if (action === "ban") {
+        await ctx.telegram.banChatMember(chatId, uId);
+        await ctx.reply(`${c} <b>O Ceifador julgou esta alma...</b>\n\nEla ultrapassou os limites e foi banida.`, {
+          parse_mode: 'HTML'
+        });
       } else {
-        await redis.del(key);
+        await ctx.telegram.restrictChatMember(chatId, uId, {
+          permissions: { can_send_messages: false }
+        });
+        await ctx.reply(`${c} <b>O Ceifador silenciou esta alma...</b>\n\nEla ultrapassou os limites.`, {
+          parse_mode: 'HTML'
+        });
       }
+
+      await redis.del(key);
     }
 
-    // MUTE
-    else if (mode === "mute") {
-      await ctx.deleteMessage().catch(() => {});
+    await sendLog(ctx, chatId, "ANTI-LINK", info, formatUser(ctx.from), "envio de link");
 
-      const until = duration > 0
-        ? Math.floor(Date.now() / 1000) + duration
-        : 0;
-
-      await ctx.telegram.restrictChatMember(chatId, uId, {
-        permissions: { can_send_messages: false },
-        until_date: until || undefined
-      }).catch(() => {});
-
-      await ctx.reply(`${c} <b>O Ceifador silenciou esta alma...</b>`, { parse_mode: 'HTML' });
-    }
-
-    // KICK
-    else if (mode === "kick") {
-      await ctx.deleteMessage().catch(() => {});
-
-      await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
-      await ctx.telegram.unbanChatMember(chatId, uId).catch(() => {});
-
-      await ctx.reply(`${c} <b>O Ceifador expulsou esta alma...</b>`, { parse_mode: 'HTML' });
-    }
-
-    // BAN
-    else if (mode === "ban") {
-      await ctx.deleteMessage().catch(() => {});
-
-      await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
-
-      await ctx.reply(`${c} <b>O Ceifador baniu esta alma...</b>`, { parse_mode: 'HTML' });
-    }
-
+    return;
   }
 }
 
-  // --- HELP OBLITERAÇÃO (DIMENSÃO FANTASMA) ---
+    // --- HELP OBLITERAÇÃO (DIMENSÃO FANTASMA) ---
   if (text.startsWith("/help")) {
     const h = `${c} <b>👁️ O Ceifador revela seus poderes...</b>\n\n` +
       `<b>🔎 Identificação</b>\n/id — Revela a essência da alma\n/staff — Mostra os sentinelas do território\n/chatid — ID deste território\n\n` +
