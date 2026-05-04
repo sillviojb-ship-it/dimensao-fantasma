@@ -518,16 +518,18 @@ if (data.startsWith("w_del_")) {
   } catch (e) { await ctx.answerCbQuery("❌ Erro ao deletar."); }
 }
 
-  // --- [HANDLER DO BOTÃO INÍCIO] ---
+    // --- [HANDLER DO BOTÃO INÍCIO PROFISSIONAL] ---
   if (data === "start") {
-    await ctx.answerCbQuery(); // Para o "pisca-pisca"
-    // Simulamos o disparo do comando start que já existe no bot
-    return bot.handleUpdate({
-      update_id: 0,
-      message: {
-        chat: { id: ctx.chat.id },
-        from: { id: ctx.from.id, first_name: ctx.from.first_name },
-        text: "/start"
+    await ctx.answerCbQuery();
+    const mention = `<a href="tg://user?id=${ctx.from.id}"><b>${ctx.from.first_name}</b></a>`;
+    return ctx.editMessageText(`${c} <b>SAUDAÇÕES! O PACTO ESTÁ SELADO, ${mention}!</b>\n\n<i>Gerencie os poderes do território através dos módulos abaixo:</i>`, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "📜 Logs", callback_data: "menu_logs" }, { text: "⚠️ Advertências", callback_data: "menu_warn" }],
+          [{ text: "🛡️ Moderação", callback_data: "menu_mod" }, { text: "⚙️ Sistema", callback_data: "menu_sys" }],
+          [{ text: "🧛 Agente IA Enterprise", callback_data: "menu_ai" }]
+        ]
       }
     });
   }
