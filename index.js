@@ -115,40 +115,19 @@ bot.on("callback_query", async (ctx) => {
   const data = ctx.callbackQuery.data;
   if (!data) return;
 
-  try {
-    // --- BLOCO 1: SUCESSO E CÓPIA ---
-    if (data === "del_msg") { await ctx.deleteMessage().catch(() => {}); return ctx.answerCbQuery("🗑️"); }
-    if (data.startsWith("copy_")) {
-      const txt = Buffer.from(data.replace("copy_", ""), 'base64').toString();
-      await ctx.reply(`<code>${txt}</code>`, { parse_mode: 'HTML' });
-      return ctx.answerCbQuery("✅ Copiado!");
-    }
-    if (data.startsWith("alert_")) {
-      const alertMsg = await redis.get(`alert_msg:${data}`) || "💀";
-      return ctx.answerCbQuery(alertMsg, { show_alert: data.includes("_PP_") });
-    }
-
-    // --- BLOCO 2: MENU LIMPEZA ---
-    if (data === "menu_limpeza") {
-      await ctx.editMessageText(`🧹 <b>SISTEMA DE LIMPEZA</b>`, { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🤖 Limpar Admins", callback_data: "limpeza_admin" }], [{ text: "👥 Limpar Users", callback_data: "limpeza_user" }], [{ text: "⬅️ Voltar", callback_data: "back_start" }]] } });
-      return ctx.answerCbQuery();
-    }
-    if (data === "limpeza_admin" || data === "limpeza_user") {
-      const startId = ctx.callbackQuery.message.message_id;
-      for (let i = 0; i < 50; i++) { await ctx.telegram.deleteMessage(ctx.chat.id, startId - i).catch(() => {}); }
-      return ctx.answerCbQuery("🧹 Purificado!", { show_alert: true });
-    }
-
-    // --- BLOCO 3: O RESTANTE DO SEU CÓDIGO ---
-    // AQUI VOCÊ COLA O SEU CÓDIGO ORIGINAL (REPORT_JULGAR, MENU_LOGS, ETC...)
-    // ... cole aqui do "if (data === "report_julgar")" até o final ...
-
-  } catch (err) {
-    console.error("Erro no callback:", err);
-    ctx.answerCbQuery("❌ Erro no ritual.").catch(() => {});
+  // --- 1. MÓDULO DE DELEÇÃO E CÓPIA ---
+  if (data === "del_msg") return ctx.deleteMessage().catch(() => {});
+  
+  if (data.startsWith("copy_")) {
+    const txt = Buffer.from(data.replace("copy_", ""), 'base64').toString();
+    return ctx.answerCbQuery(txt, { show_alert: true });
   }
 
-
+    // ================================
+// MENU LIMPEZA (NOVO - CEIFADOR)
+// ================================
+if (data.startsWith("cfg_clean_")) {
+  const gId = data.replace("cfg_clean_", "");
 
   const adm = await redis.get(`clean:admin:${gId}`) || "off";
   const usr = await redis.get(`clean:user:${gId}`) || "off";
@@ -170,9 +149,9 @@ Configure quais comandos devem ser apagados automaticamente no território.
       ]
     }
   });
-  
 
   return ctx.answerCbQuery();
+}
 
 // ================================
 // SUBMENU ADMIN / USER
@@ -227,6 +206,16 @@ if (data.startsWith("clean_on_") || data.startsWith("clean_off_")) {
     ]
   });
 }
+
+  // --- 3. MOTOR DE ALERTAS DO /SAY SUPREMO ---
+  if (data.startsWith("alert_")) {
+    if (!redis) return ctx.answerCbQuery("⚠️ Erro.", { show_alert: true });
+    const alertMsg = await redis.get(`alert_msg:${data}`) || "💀 Expirado.";
+    const isPopup = data.includes("_PP_"); 
+    return ctx.answerCbQuery(alertMsg, { show_alert: isPopup });
+  }
+
+  // ... (o restante dos seus outros IFs de Logs, Warn, etc, continuam aqui abaixo)
 
   // --- MOTOR DO BOTÃO DE JULGAMENTO (RESOLVIDO) ---
   if (data === "report_julgar") {
@@ -1535,11 +1524,19 @@ fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
       delete body.entities;
     }
     
-    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+        // --- ENVIO CORRIGIDO ---
+    const resposta = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify(body)
     });
-const resultado = await resposta.json();
-console.log("SAY RESULTADO:", JSON.stringify(resultado));
+
+    const resultado = await resposta.json();
+    console.log("SAY RESULTADO:", JSON.stringify(resultado));
+    
+    await ctx.deleteMessage().catch(() => {});
+
+console.log("SAY RESULTADO:",JSON.stringify(resultado));
 console.log("SAY BODY:", JSON.stringify(body));
     await ctx.deleteMessage().catch(() => {});
   } catch (err) { console.log("Erro no Say:", err.message); }
