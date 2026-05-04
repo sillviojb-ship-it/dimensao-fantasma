@@ -1167,7 +1167,6 @@ if (!redis) {
 }
 
 const textMsg = (m.text || m.caption || "").toLowerCase();
-const chatId = ctx.chat.id;
 
 // DETECTA LINK
 const hasLink = /(https?:\/\/|t\.me|www\.)/i.test(textMsg);
@@ -1269,6 +1268,7 @@ if (mode === "ban") {
 `${c} <b>O Ceifador baniu esta alma...</b>`,
 { parse_mode: 'HTML' });
 }
+
   // --- HELP OBLITERAÇÃO (DIMENSÃO FANTASMA) ---
   if (text.startsWith("/help")) {
     const h = `${c} <b>👁️ O Ceifador revela seus poderes...</b>\n\n` +
