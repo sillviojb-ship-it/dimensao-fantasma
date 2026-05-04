@@ -518,8 +518,8 @@ if (data.startsWith("w_del_")) {
   } catch (e) { await ctx.answerCbQuery("❌ Erro ao deletar."); }
 }
 
-/// ================================
-// MENU ANTI-LINK (CEIFADOR)
+// ================================
+// MENU ANTI-LINK (CEIFADOR PRO FINAL)
 // ================================
 if (data.startsWith("cfg_links_")) {
   if (!redis) {
@@ -538,12 +538,13 @@ if (data.startsWith("cfg_links_")) {
     delete: "🗑 DELETE",
     warn: "⚠️ WARN",
     mute: "🔇 MUTE",
+    kick: "👢 KICK",
     ban: "🚫 BAN"
   }[mode] || "⚠️ WARN";
 
-  const timeLabel = time == "0"
-    ? "♾️ Permanente"
-    : `${time}s`;
+  const timeLabel = time == "0" ? "♾️ Permanente" : `${time}s`;
+
+  const btn = (text, value) => mode === value ? `🟢 ${text}` : text;
 
   await ctx.editMessageText(
 `${c} <b>SISTEMA ANTI-LINK</b>
@@ -559,18 +560,22 @@ Controle o bloqueio automático de links no território.
         inline_keyboard: [
 
           [
-            { text: "🟢 Ativar", callback_data: `links_on_${gId}` },
-            { text: "🔴 Desativar", callback_data: `links_off_${gId}` }
+            { text: isOn ? "🟢 Ativado" : "🟢 Ativar", callback_data: `links_on_${gId}` },
+            { text: !isOn ? "🔴 Desativado" : "🔴 Desativar", callback_data: `links_off_${gId}` }
           ],
 
           [
-            { text: "🗑 Delete", callback_data: `links_mode_${gId}_delete` },
-            { text: "⚠️ Warn", callback_data: `links_mode_${gId}_warn` }
+            { text: btn("🗑 Delete", "delete"), callback_data: `links_mode_${gId}_delete` },
+            { text: btn("⚠️ Warn", "warn"), callback_data: `links_mode_${gId}_warn` }
           ],
 
           [
-            { text: "🔇 Mute", callback_data: `links_mode_${gId}_mute` },
-            { text: "🚫 Ban", callback_data: `links_mode_${gId}_ban` }
+            { text: btn("🔇 Mute", "mute"), callback_data: `links_mode_${gId}_mute` },
+            { text: btn("👢 Kick", "kick"), callback_data: `links_mode_${gId}_kick` }
+          ],
+
+          [
+            { text: btn("🚫 Ban", "ban"), callback_data: `links_mode_${gId}_ban` }
           ],
 
           [
@@ -601,13 +606,9 @@ Controle o bloqueio automático de links no território.
 }
 
 // ================================
-// CONTROLE ANTI-LINK (ON/OFF)
+// ATIVAR / DESATIVAR
 // ================================
 if (data.startsWith("links_on_") || data.startsWith("links_off_")) {
-  if (!redis) {
-    return ctx.answerCbQuery("⚠️ Memória indisponível", { show_alert: true });
-  }
-
   const parts = data.split("_");
   const action = parts[1];
   const gId = parts[2];
@@ -618,25 +619,20 @@ if (data.startsWith("links_on_") || data.startsWith("links_off_")) {
     action === "on" ? "🟢 Anti-Link ativado" : "🔴 Anti-Link desativado"
   );
 
-  return ctx.editMessageReplyMarkup({
-    inline_keyboard: [
-      [{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]
-    ]
+  return ctx.editMessageText("🔄 Atualizando...", {
+    reply_markup: {
+      inline_keyboard: [[{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]]
+    }
   });
 }
 
 // ================================
-// CONFIG MODO ANTI-LINK
+// CONFIG MODO
 // ================================
 if (data.startsWith("links_mode_")) {
-  if (!redis) {
-    return ctx.answerCbQuery("⚠️ Erro de memória", { show_alert: true });
-  }
-
   const [, , gId, mode] = data.split("_");
 
-  const valid = ["delete", "warn", "mute", "ban"];
-
+  const valid = ["delete", "warn", "mute", "kick", "ban"];
   if (!valid.includes(mode)) {
     return ctx.answerCbQuery("❌ Modo inválido");
   }
@@ -645,33 +641,30 @@ if (data.startsWith("links_mode_")) {
 
   await ctx.answerCbQuery(`⚙️ Modo definido: ${mode}`);
 
-  return ctx.editMessageReplyMarkup({
-    inline_keyboard: [
-      [{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]
-    ]
+  return ctx.editMessageText("🔄 Atualizando...", {
+    reply_markup: {
+      inline_keyboard: [[{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]]
+    }
   });
 }
 
 // ================================
-// TEMPO DE PUNIÇÃO
+// TEMPO
 // ================================
 if (data.startsWith("links_time_")) {
-  if (!redis) {
-    return ctx.answerCbQuery("⚠️ Erro de memória", { show_alert: true });
-  }
-
   const [, , gId, time] = data.split("_");
 
   await redis.set(`time:links:${gId}`, time);
 
   await ctx.answerCbQuery("⏱ Tempo definido");
 
-  return ctx.editMessageReplyMarkup({
-    inline_keyboard: [
-      [{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]
-    ]
+  return ctx.editMessageText("🔄 Atualizando...", {
+    reply_markup: {
+      inline_keyboard: [[{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]]
+    }
   });
 }
+
   // --- MENU: AGENTE IA ENTERPRISE ---
   if (data === "menu_ai") {
     await ctx.editMessageText(`${c} <b>🧛 AGENTE IA ENTERPRISE</b>\n\n<i>O Ceifador está processando frequências de inteligência superior...</i>\n\nAs sombras estão aprendendo a analisar almas e automatizar o julgamento no território.\n\n🛡️ <b>Status:</b> Em desenvolvimento nas câmaras do submundo.`, {
@@ -1165,34 +1158,51 @@ if (redis && m.from) {
   }
   
 // ================================
-// ANTI-LINK (CONTROLADO POR MENU)
+// ANTI-LINK (SISTEMA PROFISSIONAL)
 // ================================
 
-await ctx.deleteMessage().catch((e) => {
-  console.log("ERRO AO DELETAR:", e);
-});
+if (!redis) {
+  console.log("ANTI-LINK: Redis indisponível");
+  return;
+}
 
+const textMsg = (m.text || m.caption || "").toLowerCase();
+const chatId = ctx.chat.id;
+
+// DETECTA LINK
+const hasLink = /(https?:\/\/|t\.me|www\.)/i.test(textMsg);
+if (!hasLink) return;
+
+// IGNORA WHITELIST
+const whitelist = await redis.smembers("whitelist_links") || [];
+if (whitelist.some(w => textMsg.includes(w))) return;
+
+// IGNORA ADM
+const isAdm = await isAdmin(ctx);
+if (isAdm) return;
+
+// CONFIG
 const mode = (await redis.get(`mode:links:${chatId}`)) || "warn";
 const duration = parseInt(await redis.get(`time:links:${chatId}`)) || 0;
-
-console.log("MODE LINKS:", mode);
-
-// ================================
-// DELETE (PRIORIDADE TOTAL)
-// ================================
-if (mode === "delete") {
-  return; // só apagou e encerra
-}
 
 const uId = m.from.id;
 const info = formatUser(m.from);
 
 // ================================
+// DELETE
+// ================================
+if (mode === "delete") {
+  await ctx.deleteMessage().catch(() => {});
+  return;
+}
+
+// ================================
 // WARN
 // ================================
 if (mode === "warn") {
-  const key = `warns:${chatId}:${uId}`;
+  await ctx.deleteMessage().catch(() => {});
 
+  const key = `warns:${chatId}:${uId}`;
   let w = parseInt(await redis.get(key)) || 0;
   w++;
 
@@ -1201,7 +1211,13 @@ if (mode === "warn") {
   const limit = parseInt(await redis.get(`warn:limit:${chatId}`)) || 4;
 
   if (w < limit) {
-    return ctx.reply(`${c} <b>O Ceifador marcou esta alma...</b>\n\nUsuário:\n<b>${info}</b>\nMotivo: envio de link\nWarn: ${w}/${limit}`, { parse_mode: 'HTML' });
+    return ctx.reply(
+`${c} <b>O Ceifador marcou esta alma...</b>
+
+Usuário:
+<b>${info}</b>
+Motivo: envio de link
+Warn: ${w}/${limit}`, { parse_mode: 'HTML' });
   }
 
   await redis.del(key);
@@ -1211,25 +1227,48 @@ if (mode === "warn") {
 // MUTE
 // ================================
 if (mode === "mute") {
-  const until = duration > 0 ? Math.floor(Date.now()/1000) + duration : 0;
+  await ctx.deleteMessage().catch(() => {});
+
+  const until = duration > 0
+    ? Math.floor(Date.now() / 1000) + duration
+    : 0;
 
   await ctx.telegram.restrictChatMember(chatId, uId, {
     permissions: { can_send_messages: false },
     until_date: until || undefined
-  });
+  }).catch(() => {});
 
-  return ctx.reply(`${c} <b>O Ceifador silenciou esta alma...</b>`, { parse_mode: 'HTML' });
+  return ctx.reply(
+`${c} <b>O Ceifador silenciou esta alma...</b>`,
+{ parse_mode: 'HTML' });
+}
+
+// ================================
+// KICK
+// ================================
+if (mode === "kick") {
+  await ctx.deleteMessage().catch(() => {});
+
+  await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
+  await ctx.telegram.unbanChatMember(chatId, uId).catch(() => {});
+
+  return ctx.reply(
+`${c} <b>O Ceifador expulsou esta alma...</b>`,
+{ parse_mode: 'HTML' });
 }
 
 // ================================
 // BAN
 // ================================
 if (mode === "ban") {
-  await ctx.telegram.banChatMember(chatId, uId);
+  await ctx.deleteMessage().catch(() => {});
 
-  return ctx.reply(`${c} <b>O Ceifador baniu esta alma...</b>`, { parse_mode: 'HTML' });
+  await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
+
+  return ctx.reply(
+`${c} <b>O Ceifador baniu esta alma...</b>`,
+{ parse_mode: 'HTML' });
 }
-
   // --- HELP OBLITERAÇÃO (DIMENSÃO FANTASMA) ---
   if (text.startsWith("/help")) {
     const h = `${c} <b>👁️ O Ceifador revela seus poderes...</b>\n\n` +
