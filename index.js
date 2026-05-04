@@ -1399,14 +1399,14 @@ Warn: ${w}/${limit}`, { parse_mode: 'HTML' });
   }
 
 
-// --- [COMANDO: /SAY SUPREMO] ---
+// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
     const space = ori.indexOf(' ');
     const cmdL = space === -1 ? ori.length : space + 1;
     let clean = ori.slice(cmdL);
-
+    
     const u = m.reply_to_message ? m.reply_to_message.from : m.from;
     const now = new Date();
     const fullN = `${u.first_name || ""} ${u.last_name || ""}`.trim();
@@ -1434,7 +1434,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const styles = { r: "danger", g: "success", p: "primary" };
     let ents = m.entities || m.caption_entities || [];
     let fEnts = ents.filter(e => e.offset >= cmdL).map(e => ({ ...e, offset: e.offset - cmdL }));
-
+    
     const mentionIdx = clean.indexOf(u.first_name);
     if (mentionIdx !== -1) {
       fEnts.push({ type: 'text_link', offset: mentionIdx, length: u.first_name.length, url: `tg://user?id=${u.id}` });
@@ -1457,7 +1457,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       const regA = /\{\[(?:#([rgp]) )?(.*?) - (.*?)\]\}/g;
       const regB = /\[(.*?)\]\(buttonurl(?:#(\w+))?:\/\/(.*?)(?::same)?\)/g;
       let match;
-
+      
       const addB = (st, txt, url) => {
         let b = { text: txt.trim() };
         const eId = getE(txt);
@@ -1481,6 +1481,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
         } else {
           b.url = url.trim();
         }
+        
         if (st) b.style = styles[st] || st;
         row.push(b);
       };
@@ -1493,13 +1494,15 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     const fTxt = clean.replace(/\{\[(?:#[rgp] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
 
     fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
-
-    const body = {
-      chat_id: ctx.chat.id, text: fTxt,
+    
+    const body = { 
+      chat_id: ctx.chat.id, 
+      text: fTxt, 
       entities: fEnts.length > 0 ? fEnts : undefined,
-      reply_to_message_id: m.reply_to_message?.message_id,
-      reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined,
-      show_above_text: true, expand_media_caption: true
+      reply_to_message_id: m.reply_to_message?.message_id, 
+      reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined, 
+      show_above_text: true, 
+      expand_media_caption: true 
     };
 
     let endP = "sendMessage";
@@ -1512,12 +1515,14 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       endP = "sendAudio";
       body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id;
     }
-
+    
     if (endP !== "sendMessage") {
-      body.caption = body.text; body.caption_entities = body.entities;
-      delete body.text; delete body.entities;
+      body.caption = body.text;
+      body.caption_entities = body.entities;
+      delete body.text;
+      delete body.entities;
     }
-
+    
     await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
@@ -1526,6 +1531,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   } catch (err) { console.log("Erro no Say:", err.message); }
   return;
 }
+
 // =======================
 // COMANDO: /warn (NOVO)
 // =======================
