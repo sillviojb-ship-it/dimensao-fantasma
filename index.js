@@ -114,6 +114,17 @@ bot.command("start", async (ctx) => {
 bot.on("callback_query", async (ctx) => {
   const data = ctx.callbackQuery.data;
   if (!data) return;
+  
+  // --- 3. MOTOR DE ALERTAS DO /SAY SUPREMO ---
+  if (data.startsWith("alert_")) {
+    if (!redis) return ctx.answerCbQuery("⚠️ Erro.", { show_alert: true });
+    const alertMsg = await redis.get(`alert_msg:${data}`) || "💀 Expirado.";
+    const isPopup = data.includes("_PP_"); 
+    return ctx.answerCbQuery(alertMsg, { show_alert: isPopup });
+  }
+
+  // ... (o restante dos seus outros IFs de Logs, Warn, etc, continuam aqui abaixo)
+
 
   // --- 1. MÓDULO DE DELEÇÃO E CÓPIA ---
   if (data === "del_msg") return ctx.deleteMessage().catch(() => {});
@@ -206,16 +217,6 @@ if (data.startsWith("clean_on_") || data.startsWith("clean_off_")) {
     ]
   });
 }
-
-  // --- 3. MOTOR DE ALERTAS DO /SAY SUPREMO ---
-  if (data.startsWith("alert_")) {
-    if (!redis) return ctx.answerCbQuery("⚠️ Erro.", { show_alert: true });
-    const alertMsg = await redis.get(`alert_msg:${data}`) || "💀 Expirado.";
-    const isPopup = data.includes("_PP_"); 
-    return ctx.answerCbQuery(alertMsg, { show_alert: isPopup });
-  }
-
-  // ... (o restante dos seus outros IFs de Logs, Warn, etc, continuam aqui abaixo)
 
   // --- MOTOR DO BOTÃO DE JULGAMENTO (RESOLVIDO) ---
   if (data === "report_julgar") {
