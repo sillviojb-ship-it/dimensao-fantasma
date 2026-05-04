@@ -15,7 +15,7 @@ try {
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-const c = "<tg-emoji emoji-id='4916220696025106096'>💀</tg-emoji>";
+const c = "💀";
 const whitelist = ["dimensao-fantasma.pages.dev"];
 
 const isAdmin = async (ctx) => {
