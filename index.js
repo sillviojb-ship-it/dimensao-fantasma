@@ -115,32 +115,40 @@ bot.on("callback_query", async (ctx) => {
   const data = ctx.callbackQuery.data;
   if (!data) return;
 
-  // --- 1. MÓDULO DE ALERTAS (SAY SUPREMO) - DEVE SER O PRIMEIRO ---
-  if (data.startsWith("alert_")) {
-    if (!redis) return ctx.answerCbQuery("⚠️ Erro.", { show_alert: true });
-    const alertMsg = await redis.get(`alert_msg:${data}`) || "💀 Expirado.";
-    const isPopup = data.includes("_PP_"); 
-    return ctx.answerCbQuery(alertMsg, { show_alert: isPopup });
+  try {
+    // --- BLOCO 1: SUCESSO E CÓPIA ---
+    if (data === "del_msg") { await ctx.deleteMessage().catch(() => {}); return ctx.answerCbQuery("🗑️"); }
+    if (data.startsWith("copy_")) {
+      const txt = Buffer.from(data.replace("copy_", ""), 'base64').toString();
+      await ctx.reply(`<code>${txt}</code>`, { parse_mode: 'HTML' });
+      return ctx.answerCbQuery("✅ Copiado!");
+    }
+    if (data.startsWith("alert_")) {
+      const alertMsg = await redis.get(`alert_msg:${data}`) || "💀";
+      return ctx.answerCbQuery(alertMsg, { show_alert: data.includes("_PP_") });
+    }
+
+    // --- BLOCO 2: MENU LIMPEZA ---
+    if (data === "menu_limpeza") {
+      await ctx.editMessageText(`🧹 <b>SISTEMA DE LIMPEZA</b>`, { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: "🤖 Limpar Admins", callback_data: "limpeza_admin" }], [{ text: "👥 Limpar Users", callback_data: "limpeza_user" }], [{ text: "⬅️ Voltar", callback_data: "back_start" }]] } });
+      return ctx.answerCbQuery();
+    }
+    if (data === "limpeza_admin" || data === "limpeza_user") {
+      const startId = ctx.callbackQuery.message.message_id;
+      for (let i = 0; i < 50; i++) { await ctx.telegram.deleteMessage(ctx.chat.id, startId - i).catch(() => {}); }
+      return ctx.answerCbQuery("🧹 Purificado!", { show_alert: true });
+    }
+
+    // --- BLOCO 3: O RESTANTE DO SEU CÓDIGO ---
+    // AQUI VOCÊ COLA O SEU CÓDIGO ORIGINAL (REPORT_JULGAR, MENU_LOGS, ETC...)
+    // ... cole aqui do "if (data === "report_julgar")" até o final ...
+
+  } catch (err) {
+    console.error("Erro no callback:", err);
+    ctx.answerCbQuery("❌ Erro no ritual.").catch(() => {});
   }
 
-  // --- 2. MÓDULO DE DELEÇÃO E CÓPIA ---
-  if (data === "del_msg") {
-    await ctx.deleteMessage().catch(() => {});
-    return ctx.answerCbQuery("🗑️ Mensagem removida.");
-  }
-  
-  if (data.startsWith("copy_")) {
-    const txt = Buffer.from(data.replace("copy_", ""), 'base64').toString();
-    // A CÓPIA AGORA É VIA MENSAGEM (MAIS FÁCIL PARA O USUÁRIO)
-    return ctx.reply(`<code>${txt}</code>`, { parse_mode: 'HTML' });
-  }
 
-  // --- 3. MÓDULO DE LIMPEZA ---
-  if (data === "menu_limpeza") {
-     // ... (seu código de menu_limpeza aqui)
-  }
-
-  // ... (restante do seu código)
 
   const adm = await redis.get(`clean:admin:${gId}`) || "off";
   const usr = await redis.get(`clean:user:${gId}`) || "off";
@@ -162,6 +170,7 @@ Configure quais comandos devem ser apagados automaticamente no território.
       ]
     }
   });
+  
 
   return ctx.answerCbQuery();
 
