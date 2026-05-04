@@ -665,6 +665,32 @@ if (data.startsWith("links_time_")) {
   });
 }
 
+// ================================
+// ADICIONAR NA BLACKLIST (FUNCIONANDO)
+// ================================
+if (data === "add_black") {
+
+  await redis.set(`wait_black:${ctx.from.id}`, "1", "EX", 120);
+
+  await ctx.editMessageText(`${c} <b>CONDENAÇÃO INICIADA</b>
+
+Envie agora:
+
+• ID da alma
+• ou encaminhe uma mensagem
+
+<i>O Ceifador aguarda...</i>`, {
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "❌ Cancelar", callback_data: "view_black" }]
+      ]
+    }
+  });
+
+  return ctx.answerCbQuery();
+}
+
   // --- MENU: AGENTE IA ENTERPRISE ---
   if (data === "menu_ai") {
     await ctx.editMessageText(`${c} <b>🧛 AGENTE IA ENTERPRISE</b>\n\n<i>O Ceifador está processando frequências de inteligência superior...</i>\n\nAs sombras estão aprendendo a analisar almas e automatizar o julgamento no território.\n\n🛡️ <b>Status:</b> Em desenvolvimento nas câmaras do submundo.`, {
