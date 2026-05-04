@@ -977,7 +977,7 @@ if (redis && m.from) {
       }
     }
 
-        // --- PACTO DE SANGUE (CLONAGEM) ---
+            // --- PACTO DE SANGUE (CLONAGEM) ---
     if (waitingGid) {
       if (!m.reply_to_message) return ctx.reply("Responda à mensagem!");
       const msg = m.reply_to_message;
@@ -987,21 +987,17 @@ if (redis && m.from) {
       await redis.sadd(`w_list:${waitingGid}`, JSON.stringify(v));
       await redis.del(`w_waiting:${ctx.from.id}`);
       
-      // Resposta Profissional com a identidade do Ceifador
-      const msgConfirm = await ctx.reply(`${c} <b>DNA CLONADO COM SUCESSO!</b>\n\n` +
-                                         `<i>O rastro foi selado e armazenado nas sombras.</i>`, { 
+      // Resposta Profissional - Agora fixa para você ter tempo de usar os botões
+      return ctx.reply(`${c} <b>DNA CLONADO COM SUCESSO!</b>\n\n` +
+                       `<i>O rastro foi selado e armazenado nas sombras.</i>`, { 
         parse_mode: 'HTML',
         reply_markup: { 
           inline_keyboard: [
             [{ text: "🏠 Voltar ao Menu", callback_data: `cfg_welcome_${waitingGid}` }],
-            [{ text: "💀 Início", callback_data: `start` }] // Botão de retorno direto ao início
+            [{ text: "💀 Início", callback_data: `start` }]
           ] 
         } 
       });
-      
-      // Auto-limpeza da confirmação após 5 segundos para manter o chat limpo
-      setTimeout(() => ctx.telegram.deleteMessage(ctx.chat.id, msgConfirm.message_id).catch(() => {}), 5000);
-      return;
     }
 }
   const reply = m.reply_to_message;
