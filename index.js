@@ -1158,26 +1158,21 @@ if (redis && m.from) {
   }
   
 // ================================
-// ANTI-LINK (SISTEMA PROFISSIONAL)
+// ANTI-LINK (FINAL COMPATÍVEL)
 // ================================
 
-if (!redis) {
-  console.log("ANTI-LINK: Redis indisponível");
-  return;
-}
+if (!redis) return;
 
 const textMsg = (m.text || m.caption || "").toLowerCase();
 
 // DETECTA LINK
-const hasLink = /(https?:\/\/|t\.me|www\.)/i.test(textMsg);
-if (!hasLink) return;
+if (!/(https?:\/\/|t\.me|www\.)/i.test(textMsg)) return;
 
 // IGNORA WHITELIST
 const whitelist = await redis.smembers("whitelist_links") || [];
 if (whitelist.some(w => textMsg.includes(w))) return;
 
-// IGNORA ADM
-const isAdm = await isAdmin(ctx);
+// IGNORA ADMIN
 if (isAdm) return;
 
 // CONFIG
@@ -1210,8 +1205,7 @@ if (mode === "warn") {
   const limit = parseInt(await redis.get(`warn:limit:${chatId}`)) || 4;
 
   if (w < limit) {
-    return ctx.reply(
-`${c} <b>O Ceifador marcou esta alma...</b>
+    return ctx.reply(`${c} <b>O Ceifador marcou esta alma...</b>
 
 Usuário:
 <b>${info}</b>
@@ -1237,9 +1231,7 @@ if (mode === "mute") {
     until_date: until || undefined
   }).catch(() => {});
 
-  return ctx.reply(
-`${c} <b>O Ceifador silenciou esta alma...</b>`,
-{ parse_mode: 'HTML' });
+  return ctx.reply(`${c} <b>O Ceifador silenciou esta alma...</b>`, { parse_mode: 'HTML' });
 }
 
 // ================================
@@ -1251,9 +1243,7 @@ if (mode === "kick") {
   await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
   await ctx.telegram.unbanChatMember(chatId, uId).catch(() => {});
 
-  return ctx.reply(
-`${c} <b>O Ceifador expulsou esta alma...</b>`,
-{ parse_mode: 'HTML' });
+  return ctx.reply(`${c} <b>O Ceifador expulsou esta alma...</b>`, { parse_mode: 'HTML' });
 }
 
 // ================================
@@ -1264,9 +1254,7 @@ if (mode === "ban") {
 
   await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
 
-  return ctx.reply(
-`${c} <b>O Ceifador baniu esta alma...</b>`,
-{ parse_mode: 'HTML' });
+  return ctx.reply(`${c} <b>O Ceifador baniu esta alma...</b>`, { parse_mode: 'HTML' });
 }
 
   // --- HELP OBLITERAÇÃO (DIMENSÃO FANTASMA) ---
