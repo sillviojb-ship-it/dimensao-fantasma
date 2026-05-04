@@ -518,7 +518,7 @@ if (data.startsWith("w_del_")) {
   } catch (e) { await ctx.answerCbQuery("❌ Erro ao deletar."); }
 }
 
-// ================================
+/// ================================
 // MENU ANTI-LINK (CEIFADOR)
 // ================================
 if (data.startsWith("cfg_links_")) {
@@ -528,57 +528,74 @@ if (data.startsWith("cfg_links_")) {
 
   const gId = data.replace("cfg_links_", "");
 
-  const status = (await redis.get(`stat:links:${gId}`)) === "on"
-    ? "🟢 ATIVO"
-    : "🔴 DESLIGADO";
+  const isOn = (await redis.get(`stat:links:${gId}`)) === "on";
+  const mode = (await redis.get(`mode:links:${gId}`)) || "warn";
+  const time = (await redis.get(`time:links:${gId}`)) || "0";
+
+  const status = isOn ? "🟢 ATIVO" : "🔴 DESLIGADO";
+
+  const modeLabel = {
+    delete: "🗑 DELETE",
+    warn: "⚠️ WARN",
+    mute: "🔇 MUTE",
+    ban: "🚫 BAN"
+  }[mode] || "⚠️ WARN";
+
+  const timeLabel = time == "0"
+    ? "♾️ Permanente"
+    : `${time}s`;
 
   await ctx.editMessageText(
 `${c} <b>SISTEMA ANTI-LINK</b>
 
 Controle o bloqueio automático de links no território.
 
-📊 Status: ${status}`, 
-  {
-    parse_mode: "HTML",
-    reply_markup: {
-      inline_keyboard: [
-        [
-          { text: "🟢 Ativar", callback_data: `links_on_${gId}` },
-          { text: "🔴 Desativar", callback_data: `links_off_${gId}` }
-        ],
+📊 Status: ${status}
+⚙️ Modo: ${modeLabel}
+⏱ Tempo: ${timeLabel}`,
+    {
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
 
-        [
-          { text: "🗑 Delete", callback_data: `links_mode_${gId}_delete` },
-          { text: "⚠️ Warn", callback_data: `links_mode_${gId}_warn` }
-        ],
+          [
+            { text: "🟢 Ativar", callback_data: `links_on_${gId}` },
+            { text: "🔴 Desativar", callback_data: `links_off_${gId}` }
+          ],
 
-        [
-          { text: "🔇 Mute", callback_data: `links_mode_${gId}_mute` },
-          { text: "🚫 Ban", callback_data: `links_mode_${gId}_ban` }
-        ],
+          [
+            { text: "🗑 Delete", callback_data: `links_mode_${gId}_delete` },
+            { text: "⚠️ Warn", callback_data: `links_mode_${gId}_warn` }
+          ],
 
-        [
-          { text: "30s", callback_data: `links_time_${gId}_30` },
-          { text: "5min", callback_data: `links_time_${gId}_300` }
-        ],
+          [
+            { text: "🔇 Mute", callback_data: `links_mode_${gId}_mute` },
+            { text: "🚫 Ban", callback_data: `links_mode_${gId}_ban` }
+          ],
 
-        [
-          { text: "1h", callback_data: `links_time_${gId}_3600` },
-          { text: "1d", callback_data: `links_time_${gId}_86400` }
-        ],
+          [
+            { text: "30s", callback_data: `links_time_${gId}_30` },
+            { text: "5min", callback_data: `links_time_${gId}_300` }
+          ],
 
-        [
-          { text: "➕ Gerenciar Whitelist", callback_data: `links_white_${gId}` }
-        ],
+          [
+            { text: "1h", callback_data: `links_time_${gId}_3600` },
+            { text: "1d", callback_data: `links_time_${gId}_86400` }
+          ],
 
-        [
-          { text: "⬅️ Voltar", callback_data: `mod_group_${gId}` },
-          { text: "🏠 Início", callback_data: "back_start" }
+          [
+            { text: "➕ Gerenciar Whitelist", callback_data: `links_white_${gId}` }
+          ],
+
+          [
+            { text: "⬅️ Voltar", callback_data: `mod_group_${gId}` },
+            { text: "🏠 Início", callback_data: "back_start" }
+          ]
+
         ]
-      ]
+      }
     }
-  }
-);
+  );
 
   return ctx.answerCbQuery();
 }
@@ -592,7 +609,7 @@ if (data.startsWith("links_on_") || data.startsWith("links_off_")) {
   }
 
   const parts = data.split("_");
-  const action = parts[1]; // on ou off
+  const action = parts[1];
   const gId = parts[2];
 
   await redis.set(`stat:links:${gId}`, action === "on" ? "on" : "off");
@@ -601,7 +618,6 @@ if (data.startsWith("links_on_") || data.startsWith("links_off_")) {
     action === "on" ? "🟢 Anti-Link ativado" : "🔴 Anti-Link desativado"
   );
 
-  // Atualiza a tela automaticamente
   return ctx.editMessageReplyMarkup({
     inline_keyboard: [
       [{ text: "🔄 Atualizar", callback_data: `cfg_links_${gId}` }]
@@ -610,7 +626,7 @@ if (data.startsWith("links_on_") || data.startsWith("links_off_")) {
 }
 
 // ================================
-// CONFIG PUNIÇÃO ANTI-LINK
+// CONFIG MODO ANTI-LINK
 // ================================
 if (data.startsWith("links_mode_")) {
   if (!redis) {
@@ -619,9 +635,9 @@ if (data.startsWith("links_mode_")) {
 
   const [, , gId, mode] = data.split("_");
 
-  const modosValidos = ["delete", "warn", "mute", "ban"];
+  const valid = ["delete", "warn", "mute", "ban"];
 
-  if (!modosValidos.includes(mode)) {
+  if (!valid.includes(mode)) {
     return ctx.answerCbQuery("❌ Modo inválido");
   }
 
@@ -656,7 +672,6 @@ if (data.startsWith("links_time_")) {
     ]
   });
 }
-
   // --- MENU: AGENTE IA ENTERPRISE ---
   if (data === "menu_ai") {
     await ctx.editMessageText(`${c} <b>🧛 AGENTE IA ENTERPRISE</b>\n\n<i>O Ceifador está processando frequências de inteligência superior...</i>\n\nAs sombras estão aprendendo a analisar almas e automatizar o julgamento no território.\n\n🛡️ <b>Status:</b> Em desenvolvimento nas câmaras do submundo.`, {
