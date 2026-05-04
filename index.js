@@ -26,6 +26,10 @@ const isAdmin = async (ctx) => {
 };
 
 const formatUser = (u) => {
+  if (u.isIdOnly) {
+    return `ID: <code>${u.id}</code>`;
+  }
+
   const nome = u.first_name || "Sem nome";
   const user = u.username ? ` (@${u.username})` : "";
   return `${nome}${user}\nID: <code>${u.id}</code>`;
@@ -61,7 +65,7 @@ const getTarget = async (ctx) => {
 
     // --- PRIORIDADE 2: ID DIRETO ---
     if (/^\d+$/.test(alvo)) {
-      return { id: Number(alvo), first_name: "ID: " + alvo };
+      return { id: Number(alvo), first_name: "Usuário", isIdOnly: true };
     }
 
     // --- PRIORIDADE 3: USERNAME ---
