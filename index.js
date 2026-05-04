@@ -1525,24 +1525,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     await ctx.deleteMessage().catch(() => {});
   } catch (err) { console.log("Erro no Say:", err.message); }
   return;
-      // --- ENVIO E VERIFICAÇÃO ---
-    const env = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
-      method: "POST", 
-      headers: { "Content-Type": "application/json" }, 
-      body: JSON.stringify(body)
-    });
-    
-    const retorno = await env.json();
-    
-    // SE OS BOTÕES NÃO APARECEREM, O LOG ABAIXO VAI NOS DIZER O MOTIVO:
-    console.log("DEBUG SUCESSO/ERRO:", JSON.stringify(retorno));
-
-    if (!retorno.ok) {
-        console.log("ERRO REAL:", retorno.description);
-    }
-
-    await ctx.deleteMessage().catch(() => {});
-
 }
 // =======================
 // COMANDO: /warn (NOVO)
