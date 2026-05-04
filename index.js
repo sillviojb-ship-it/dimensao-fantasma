@@ -26,10 +26,6 @@ const isAdmin = async (ctx) => {
 };
 
 const formatUser = (u) => {
-  if (u.isIdOnly) {
-    return `ID: <code>${u.id}</code>`;
-  }
-
   const nome = u.first_name || "Sem nome";
   const user = u.username ? ` (@${u.username})` : "";
   return `${nome}${user}\nID: <code>${u.id}</code>`;
@@ -65,7 +61,7 @@ const getTarget = async (ctx) => {
 
     // --- PRIORIDADE 2: ID DIRETO ---
     if (/^\d+$/.test(alvo)) {
-      return { id: Number(alvo), first_name: "Usuário", isIdOnly: true };
+      return { id: Number(alvo), first_name: "ID: " + alvo };
     }
 
     // --- PRIORIDADE 3: USERNAME ---
@@ -1399,7 +1395,7 @@ Warn: ${w}/${limit}`, { parse_mode: 'HTML' });
   }
 
 
-// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL] ---
+// --- [COMANDO: /SAY SUPREMO - VERSÃO FINAL COM TODAS AS TAGS] ---
 if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
   try {
     const ori = m.text || m.caption || "";
@@ -1428,7 +1424,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       '{RULES}': rulesL, '{rules}': rulesL
     };
 
-    Object.keys(tags).forEach(t => { clean = clean.split(t).join(String(tags[t])); });
+    Object.keys(tags).forEach(t => { clean = clean.split(t).join(tags[t]); });
 
     let btns = [];
     const styles = { r: "danger", g: "success", p: "primary" };
@@ -1440,6 +1436,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       fEnts.push({ type: 'text_link', offset: mentionIdx, length: u.first_name.length, url: `tg://user?id=${u.id}` });
     }
 
+    // CORRIGIDO: busca o emoji no texto ORIGINAL antes das substituições de tags
     const getE = (txtBtn) => {
       const offOriginal = ori.indexOf(txtBtn);
       if (offOriginal === -1) return null;
@@ -1463,6 +1460,7 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
         const eId = getE(txt);
         if (eId) {
           b.icon_custom_emoji_id = eId;
+          // CORRIGIDO: só substitui o texto se o resultado não ficar vazio
           const semEmoji = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim();
           if (semEmoji.length > 0) b.text = semEmoji;
         }
@@ -1493,21 +1491,20 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
 
     const fTxt = clean.replace(/\{\[(?:#[rgp] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
 
-    fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
+// Remove entities cujo offset ultrapassa o tamanho do texto final
+fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
     
     const body = { 
-      chat_id: ctx.chat.id, 
-      text: fTxt, 
-      entities: fEnts.length > 0 ? fEnts : undefined,
+      chat_id: ctx.chat.id, text: fTxt, entities: fEnts.length > 0 ? fEnts : undefined,
       reply_to_message_id: m.reply_to_message?.message_id, 
       reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined, 
-      show_above_text: true, 
-      expand_media_caption: true 
+      show_above_text: true, expand_media_caption: true 
     };
 
     let endP = "sendMessage";
     if (m.photo) {
-      endP = "sendPhoto"; body.photo = m.photo[m.photo.length - 1].file_id;
+      endP = "sendPhoto";
+      body.photo = m.photo[m.photo.length - 1].file_id;
     } else if (m.video || m.animation) {
       endP = m.video ? "sendVideo" : "sendAnimation";
       body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id;
@@ -1526,12 +1523,13 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
-
+const resultado = await resposta.json();
+console.log("SAY RESULTADO:", JSON.stringify(resultado));
+console.log("SAY BODY:", JSON.stringify(body));
     await ctx.deleteMessage().catch(() => {});
   } catch (err) { console.log("Erro no Say:", err.message); }
   return;
 }
-
 // =======================
 // COMANDO: /warn (NOVO)
 // =======================
