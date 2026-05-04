@@ -44,24 +44,27 @@ const sendLog = async (ctx, chatId, acao, alvo, admin, motivo) => {
   await ctx.telegram.sendMessage(logChannel, logMsg, { parse_mode: 'HTML' }).catch(() => {});
 };
 
-// --- FUNÇÃO AUXILIAR: LOCALIZADOR DE ALMAS (FINAL COM CACHE) ---
+// --- FUNÇÃO AUXILIAR: LOCALIZADOR DE ALMAS (FINAL ESTÁVEL) ---
 const getTarget = async (ctx) => {
+  if (!ctx.message) return null;
+
+  // --- PRIORIDADE 1: REPLY ---
   if (ctx.message.reply_to_message) {
     return ctx.message.reply_to_message.from;
   }
 
   const text = ctx.message.text || ctx.message.caption || "";
-  const args = text.split(" ");
+  const args = text.trim().split(/\s+/);
 
   if (args.length > 1) {
     const alvo = args[1];
 
-    // --- ID DIRETO ---
+    // --- PRIORIDADE 2: ID DIRETO ---
     if (/^\d+$/.test(alvo)) {
       return { id: Number(alvo), first_name: "ID: " + alvo };
     }
 
-    // --- USERNAME COM CACHE ---
+    // --- PRIORIDADE 3: USERNAME ---
     if (alvo.startsWith("@")) {
       const username = alvo.slice(1).toLowerCase();
 
@@ -72,11 +75,17 @@ const getTarget = async (ctx) => {
         }
       }
 
-      // fallback (caso não esteja no cache ainda)
-      return { id: alvo, first_name: alvo };
+      // --- NÃO ENCONTRADO NO CACHE ---
+      await ctx.reply(
+        `${c} <b>Alma não encontrada no registro.</b>\n\nPeça para o usuário enviar uma mensagem no grupo primeiro.\n\nDepois retorne… o Ceifador aguardará.`,
+        { parse_mode: "HTML" }
+      );
+
+      return null;
     }
   }
 
+  // --- NENHUM ALVO IDENTIFICADO ---
   return null;
 };
 
