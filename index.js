@@ -479,31 +479,25 @@ if (data.startsWith("w_show_")) {
   try {
     const list = await redis.smembers(`w_list:${gId}`);
     const item = JSON.parse(list[parseInt(index)]);
-
-    // Prévia real usando Fetch para garantir o layout correto
-    const body = {
-      chat_id: ctx.chat.id,
-      reply_markup: item.reply_markup || undefined,
-      show_caption_above_media: true
-    };
-
+    const body = { chat_id: ctx.chat.id, reply_markup: item.reply_markup || undefined, show_caption_above_media: true };
     let endpoint = "sendMessage";
-    if (!item.media || item.type === 'text') {
-      body.text = item.text; body.entities = item.entities;
-    } else {
+    if (!item.media || item.type === 'text') { body.text = item.text; body.entities = item.entities; } 
+    else {
       body.caption = item.text; body.caption_entities = item.entities;
-      if (item.type === 'photo') endpoint = "sendPhoto", body.photo = item.media;
-      else if (item.type === 'video') endpoint = "sendVideo", body.video = item.media;
-      else if (item.type === 'animation') endpoint = "sendAnimation", body.animation = item.media;
+      if (item.type === 'photo') { endpoint = "sendPhoto"; body.photo = item.media; }
+      else if (item.type === 'video') { endpoint = "sendVideo"; body.video = item.media; }
+      else if (item.type === 'animation') { endpoint = "sendAnimation"; body.animation = item.media; }
     }
-
     await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endpoint}`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
-
+    // --- BOTÃO DE VOLTAR AO INÍCIO ADICIONADO AQUI ---
     await ctx.reply(`<b>PRÉ-VISUALIZAÇÃO REAL #${parseInt(index)+1}</b>`, { 
       parse_mode: "HTML",
-      reply_markup: { inline_keyboard: [[{ text: "⬅️ Voltar", callback_data: `w_view_${gId}` }, { text: "🗑️ Deletar", callback_data: `w_del_${gId}_${index}` }]] }
+      reply_markup: { inline_keyboard: [
+        [{ text: "⬅️ Voltar", callback_data: `w_view_${gId}` }, { text: "🗑️ Deletar", callback_data: `w_del_${gId}_${index}` }],
+        [{ text: "💀 Início", callback_data: "start" }]
+      ]}
     });
   } catch (e) { await ctx.answerCbQuery("❌ Erro ao visualizar."); }
 }
@@ -514,7 +508,11 @@ if (data.startsWith("w_del_")) {
     const list = await redis.smembers(`w_list:${gId}`);
     await redis.srem(`w_list:${gId}`, list[parseInt(index)]);
     await ctx.answerCbQuery("Registro deletado.");
-    return ctx.editMessageReplyMarkup({ inline_keyboard: [[{ text: "🔄 Atualizar Lista", callback_data: `w_view_${gId}` }]] });
+    // --- AGORA REDESENHA O MENU COM BOTÃO DE SAÍDA ---
+    return ctx.editMessageText(`${c} <b>Registro deletado com sucesso.</b>`, {
+      parse_mode: 'HTML',
+      reply_markup: { inline_keyboard: [[{ text: "🔄 Atualizar Lista", callback_data: `w_view_${gId}` }], [{ text: "💀 Início", callback_data: "start" }]] }
+    });
   } catch (e) { await ctx.answerCbQuery("❌ Erro ao deletar."); }
 }
 
