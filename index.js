@@ -1158,103 +1158,92 @@ if (redis && m.from) {
   }
   
 // ================================
-// ANTI-LINK (FINAL COMPATÍVEL)
+// ANTI-LINK (CORREÇÃO DEFINITIVA)
 // ================================
 
-if (!redis) return;
+if (redis && ctx.chat.type !== "private") {
 
-const textMsg = (m.text || m.caption || "").toLowerCase();
+  const textMsg = (m.text || m.caption || "").toLowerCase();
 
-// DETECTA LINK
-if (!/(https?:\/\/|t\.me|www\.)/i.test(textMsg)) return;
+  // SÓ EXECUTA SE TIVER LINK
+  if (/(https?:\/\/|t\.me|www\.)/i.test(textMsg)) {
 
-// IGNORA WHITELIST
-const whitelist = await redis.smembers("whitelist_links") || [];
-if (whitelist.some(w => textMsg.includes(w))) return;
+    const whitelist = await redis.smembers("whitelist_links") || [];
+    if (whitelist.some(w => textMsg.includes(w))) return;
 
-// IGNORA ADMIN
-if (isAdm) return;
+    if (isAdm) return;
 
-// CONFIG
-const mode = (await redis.get(`mode:links:${chatId}`)) || "warn";
-const duration = parseInt(await redis.get(`time:links:${chatId}`)) || 0;
+    const mode = (await redis.get(`mode:links:${chatId}`)) || "warn";
+    const duration = parseInt(await redis.get(`time:links:${chatId}`)) || 0;
 
-const uId = m.from.id;
-const info = formatUser(m.from);
+    const uId = m.from.id;
+    const info = formatUser(m.from);
 
-// ================================
-// DELETE
-// ================================
-if (mode === "delete") {
-  await ctx.deleteMessage().catch(() => {});
-  return;
-}
+    // DELETE
+    if (mode === "delete") {
+      await ctx.deleteMessage().catch(() => {});
+    }
 
-// ================================
-// WARN
-// ================================
-if (mode === "warn") {
-  await ctx.deleteMessage().catch(() => {});
+    // WARN
+    else if (mode === "warn") {
+      await ctx.deleteMessage().catch(() => {});
 
-  const key = `warns:${chatId}:${uId}`;
-  let w = parseInt(await redis.get(key)) || 0;
-  w++;
+      const key = `warns:${chatId}:${uId}`;
+      let w = parseInt(await redis.get(key)) || 0;
+      w++;
 
-  await redis.set(key, w);
+      await redis.set(key, w);
 
-  const limit = parseInt(await redis.get(`warn:limit:${chatId}`)) || 4;
+      const limit = parseInt(await redis.get(`warn:limit:${chatId}`)) || 4;
 
-  if (w < limit) {
-    return ctx.reply(`${c} <b>O Ceifador marcou esta alma...</b>
+      if (w < limit) {
+        await ctx.reply(`${c} <b>O Ceifador marcou esta alma...</b>
 
 Usuário:
 <b>${info}</b>
 Motivo: envio de link
 Warn: ${w}/${limit}`, { parse_mode: 'HTML' });
+      } else {
+        await redis.del(key);
+      }
+    }
+
+    // MUTE
+    else if (mode === "mute") {
+      await ctx.deleteMessage().catch(() => {});
+
+      const until = duration > 0
+        ? Math.floor(Date.now() / 1000) + duration
+        : 0;
+
+      await ctx.telegram.restrictChatMember(chatId, uId, {
+        permissions: { can_send_messages: false },
+        until_date: until || undefined
+      }).catch(() => {});
+
+      await ctx.reply(`${c} <b>O Ceifador silenciou esta alma...</b>`, { parse_mode: 'HTML' });
+    }
+
+    // KICK
+    else if (mode === "kick") {
+      await ctx.deleteMessage().catch(() => {});
+
+      await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
+      await ctx.telegram.unbanChatMember(chatId, uId).catch(() => {});
+
+      await ctx.reply(`${c} <b>O Ceifador expulsou esta alma...</b>`, { parse_mode: 'HTML' });
+    }
+
+    // BAN
+    else if (mode === "ban") {
+      await ctx.deleteMessage().catch(() => {});
+
+      await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
+
+      await ctx.reply(`${c} <b>O Ceifador baniu esta alma...</b>`, { parse_mode: 'HTML' });
+    }
+
   }
-
-  await redis.del(key);
-}
-
-// ================================
-// MUTE
-// ================================
-if (mode === "mute") {
-  await ctx.deleteMessage().catch(() => {});
-
-  const until = duration > 0
-    ? Math.floor(Date.now() / 1000) + duration
-    : 0;
-
-  await ctx.telegram.restrictChatMember(chatId, uId, {
-    permissions: { can_send_messages: false },
-    until_date: until || undefined
-  }).catch(() => {});
-
-  return ctx.reply(`${c} <b>O Ceifador silenciou esta alma...</b>`, { parse_mode: 'HTML' });
-}
-
-// ================================
-// KICK
-// ================================
-if (mode === "kick") {
-  await ctx.deleteMessage().catch(() => {});
-
-  await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
-  await ctx.telegram.unbanChatMember(chatId, uId).catch(() => {});
-
-  return ctx.reply(`${c} <b>O Ceifador expulsou esta alma...</b>`, { parse_mode: 'HTML' });
-}
-
-// ================================
-// BAN
-// ================================
-if (mode === "ban") {
-  await ctx.deleteMessage().catch(() => {});
-
-  await ctx.telegram.banChatMember(chatId, uId).catch(() => {});
-
-  return ctx.reply(`${c} <b>O Ceifador baniu esta alma...</b>`, { parse_mode: 'HTML' });
 }
 
   // --- HELP OBLITERAÇÃO (DIMENSÃO FANTASMA) ---
