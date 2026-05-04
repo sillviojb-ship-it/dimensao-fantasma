@@ -518,6 +518,21 @@ if (data.startsWith("w_del_")) {
   } catch (e) { await ctx.answerCbQuery("❌ Erro ao deletar."); }
 }
 
+  // --- [HANDLER DO BOTÃO INÍCIO] ---
+  if (data === "start") {
+    await ctx.answerCbQuery(); // Para o "pisca-pisca"
+    // Simulamos o disparo do comando start que já existe no bot
+    return bot.handleUpdate({
+      update_id: 0,
+      message: {
+        chat: { id: ctx.chat.id },
+        from: { id: ctx.from.id, first_name: ctx.from.first_name },
+        text: "/start"
+      }
+    });
+  }
+
+
   // --- MENU: AGENTE IA ENTERPRISE ---
   if (data === "menu_ai") {
     await ctx.editMessageText(`${c} <b>🧛 AGENTE IA ENTERPRISE</b>\n\n<i>O Ceifador está processando frequências de inteligência superior...</i>\n\nAs sombras estão aprendendo a analisar almas e automatizar o julgamento no território.\n\n🛡️ <b>Status:</b> Em desenvolvimento nas câmaras do submundo.`, {
