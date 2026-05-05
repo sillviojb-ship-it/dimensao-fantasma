@@ -393,47 +393,64 @@ if (data === "back_start") {
     });
   }
 
-  // =========================================================
-// --- [RITUAL] CONSTRUTOR DINÂMICO (PADRÃO PROFISSIONAL) ---
-// =========================================================
+  // --- INÍCIO DO MÓDULO DE PACTOS (COLE TUDO ISSO NO LUGAR DO ANTIGO) ---
 
-if (data.startsWith("w_ritual_")) {
-  const gId = data.replace("w_ritual_", "");
-  const draft = await redis.hgetall(`w_temp:${ctx.from.id}`) || {};
+async function render_ritual_menu(ctx, gId) {
+  const d = await redis.hgetall(`w_temp:${ctx.from.id}`) || {};
+  const txtStat = d.text ? "✅ (Definido)" : "❌ (Vazio)";
+  const medStat = d.media ? "✅ (Definida)" : "❌ (Vazia)";
+  const btnStat = d.buttons ? "✅ (Definidos)" : "❌ (Vazio)";
   
-  // Status Dinâmico
-  const txtStat = draft.text ? "✅ (Definido)" : "❌ (Vazio)";
-  const medStat = draft.media ? "✅ (Definida)" : "❌ (Vazia)";
-  const btnStat = draft.buttons ? "✅ (Definidos)" : "❌ (Vazio)";
+  const keyboard = [
+    [{ text: `📝 ${txtStat} Texto`, callback_data: `w_edit_txt_${gId}` }], 
+    [{ text: `🖼️ ${medStat} Mídia`, callback_data: `w_edit_med_${gId}` }], 
+    [{ text: `🔘 ${btnStat} Botões`, callback_data: `w_edit_btn_${gId}` }]
+  ];
   
-  await ctx.editMessageText(`${c} <b>PAINEL DO RITUAL</b>\n\n` +
-    `📜 Verbo: ${txtStat}\n👁️ Visão: ${medStat}\n⛓️ Correntes: ${btnStat}\n\n` +
-    `<i>Selecione o que deseja moldar:</i>`, { 
-    parse_mode: "HTML", 
-    reply_markup: { 
-      inline_keyboard: [
-        [{ text: "📝 " + (draft.text ? "Editar Texto" : "Definir Texto"), callback_data: `w_edit_txt_${gId}` }], 
-        [{ text: "🖼️ " + (draft.media ? "Editar Mídia" : "Definir Mídia"), callback_data: `w_edit_med_${gId}` }], 
-        [{ text: "🔘 " + (draft.buttons ? "Editar Botões" : "Definir Botões"), callback_data: `w_edit_btn_${gId}` }], 
-        // Só mostra o botão de salvar se tudo estiver configurado
-        (draft.text && draft.media && draft.buttons) ? [{ text: "🔥 SELAR PACTO (Salvar)", callback_data: `w_save_ritual_${gId}` }] : [],
-        [{ text: "⬅️ Voltar", callback_data: `cfg_welcome_${gId}` }, { text: "💀 Início", callback_data: "start" }]
-      ] 
-    } 
+  if (d.text && d.media && d.buttons) {
+    keyboard.push([{ text: "🔥 SELAR PACTO (Salvar)", callback_data: `w_save_ritual_${gId}` }]);
+  }
+  
+  keyboard.push([{ text: "⬅️ Voltar", callback_data: `cfg_welcome_${gId}` }, { text: "💀 Início", callback_data: "start" }]);
+  
+  await ctx.editMessageText(`💀 <b>PAINEL DO RITUAL</b>\n\n<i>O Ceifador aguarda suas ordens...</i>`, { 
+    parse_mode: "HTML", reply_markup: { inline_keyboard: keyboard } 
   });
 }
 
-// Quando você clica em editar, o bot pede o dado E te dá opção de cancelar
-if (data.startsWith("w_edit_")) {
-  const [,, type, gId] = data.split("_");
-  await redis.set(`w_step:${ctx.from.id}`, `${type}:${gId}`);
-  const msgs = { txt: "o <b>TEXTO</b>", med: "a <b>MÍDIA</b>", btn: "os <b>BOTÕES</b> (Nome - Link)" };
-  
-  await ctx.editMessageText(`${c} Envie ${msgs[type]} agora.\n\n<i>O Ceifador aguarda...</i>`, { 
-    parse_mode: "HTML", 
-    reply_markup: { inline_keyboard: [[{ text: "❌ Cancelar e Voltar", callback_data: `w_ritual_${gId}` }]] } 
-  });
+// BLOCO DE PROCESSAMENTO (O QUE VOCÊ ESCREVE PARA O BOT)
+const ritualStep = await redis.get(`w_step:${ctx.from.id}`);
+if (ritualStep && ctx.chat.type === "private") {
+  const [stage, gId] = ritualStep.split(":");
+  const m = ctx.message;
+  const textInput = m.text || m.caption || "";
+  const mediaId = m.photo ? m.photo[m.photo.length - 1].file_id : (m.video || m.animation || {}).file_id;
+  const type = m.photo ? 'photo' : (m.video ? 'video' : (m.animation ? 'animation' : null));
+
+  if (stage === "txt") {
+    const cleaned = (m.entities || m.caption_entities || []).map(ent => { const { user, ...rest } = ent; return rest; });
+    await redis.hset(`w_temp:${ctx.from.id}`, "text", textInput, "entities", JSON.stringify(cleaned), "type", "text");
+  } else if (stage === "med") {
+    if (textInput !== "/pular" && mediaId) await redis.hset(`w_temp:${ctx.from.id}`, "media", mediaId, "type", type);
+  } else if (stage === "btn") {
+    if (textInput !== "/pular") {
+      let buttons = [];
+      textInput.split('\n').forEach(line => {
+        const row = [];
+        line.split('&&').forEach(p => {
+          const [t, l] = p.split(' - ');
+          if (t && l) row.push({ text: t.trim(), url: l.trim() });
+        });
+        if (row.length > 0) buttons.push(row);
+      });
+      await redis.hset(`w_temp:${ctx.from.id}`, "buttons", JSON.stringify(buttons));
+    }
+  }
+  await redis.del(`w_step:${ctx.from.id}`);
+  await ctx.deleteMessage().catch(() => {});
+  return render_ritual_menu(ctx, gId); 
 }
+// --- FIM DO MÓDULO ---
 
 // --- [SISTEMA DE VISUALIZAÇÃO DIMENSÃO FANTASMA] ---
 if (data.startsWith("w_view_")) {
