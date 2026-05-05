@@ -44,30 +44,6 @@ const sendLog = async (ctx, chatId, acao, alvo, admin, motivo) => {
   await ctx.telegram.sendMessage(logChannel, logMsg, { parse_mode: 'HTML' }).catch(() => {});
 };
 
-// --- FUNÇÃO MESTRA: PAINEL DO RITUAL ---
-async function render_ritual_menu(ctx, gId) {
-  const d = await redis.hgetall(`w_temp:${ctx.from.id}`) || {};
-  const txtStat = d.text ? "✅ (Definido)" : "❌ (Vazio)";
-  const medStat = d.media ? "✅ (Definida)" : "❌ (Vazia)";
-  const btnStat = d.buttons ? "✅ (Definidos)" : "❌ (Vazio)";
-  
-  const keyboard = [
-    [{ text: `📝 ${txtStat} Texto`, callback_data: `w_edit_txt_${gId}` }], 
-    [{ text: `🖼️ ${medStat} Mídia`, callback_data: `w_edit_med_${gId}` }], 
-    [{ text: `🔘 ${btnStat} Botões`, callback_data: `w_edit_btn_${gId}` }]
-  ];
-  
-  if (d.text && d.media && d.buttons) {
-    keyboard.push([{ text: "🔥 SELAR PACTO (Salvar)", callback_data: `w_save_ritual_${gId}` }]);
-  }
-  
-  keyboard.push([{ text: "⬅️ Voltar", callback_data: `cfg_welcome_${gId}` }, { text: "💀 Início", callback_data: "start" }]);
-  
-  await ctx.editMessageText(`💀 <b>PAINEL DO RITUAL</b>\n\n<i>O Ceifador aguarda suas ordens...</i>`, { 
-    parse_mode: "HTML", reply_markup: { inline_keyboard: keyboard } 
-  });
-}
-
 // --- FUNÇÃO AUXILIAR: LOCALIZADOR DE ALMAS (FINAL COM CACHE) ---
 const getTarget = async (ctx) => {
   if (ctx.message.reply_to_message) {
@@ -941,8 +917,8 @@ if (redis && m.from) {
   }
 
     // =========================================================
-// [MÓDULO] MONITOR DE PACTOS: BOAS-VINDAS (ETAPAS DO CONTRATO)
-// =========================================================
+  // [MÓDULO] MONITOR DE PACTOS: BOAS-VINDAS (ETAPAS DO CONTRATO)
+  // =========================================================
   const ritualStep = await redis.get(`w_step:${ctx.from.id}`);
   const waitingGid = await redis.get(`w_waiting:${ctx.from.id}`);
 
@@ -957,18 +933,18 @@ if (redis && m.from) {
       const [stage, gId] = ritualStep.split(":");
       
       if (stage === "txt") {
-        const cleaned = (m.entities || m.caption_entities || []).map(ent => { const { user, ...rest } = ent; return rest; });
-        await redis.hset(`w_temp:${ctx.from.id}`, "text", textInput, "entities", JSON.stringify(cleaned), "type", "text");
+        const cleaned = (m.entities || m.caption_entities || []).map(ent => {
+          const { user, ...rest } = ent; return rest;
+        });
+        await redis.hset(`w_temp:${ctx.from.id}`, "text", textInput, "entities", JSON.stringify(cleaned));
         await redis.set(`w_step:${ctx.from.id}`, `med:${gId}`);
-        await ctx.deleteMessage().catch(() => {});
-        return render_ritual_menu(ctx, gId);
+        return ctx.reply(`${c} <b>TEXTO SELADO!</b>\nEnvie a <b>MÍDIA</b> ou /pular.`);
       }
 
       if (stage === "med") {
         if (textInput !== "/pular" && mediaId) await redis.hset(`w_temp:${ctx.from.id}`, "media", mediaId, "type", type);
         await redis.set(`w_step:${ctx.from.id}`, `btn:${gId}`);
-        await ctx.deleteMessage().catch(() => {});
-        return render_ritual_menu(ctx, gId);
+        return ctx.reply(`${c} <b>MÍDIA REGISTRADA!</b>\nEnvie os botões (Nome - Link) ou /pular.`);
       }
 
       if (stage === "btn") {
@@ -978,15 +954,22 @@ if (redis && m.from) {
             const row = [];
             line.split('&&').forEach(p => {
               const [t, l] = p.split(' - ');
-              if (t && l) row.push({ text: t.trim(), url: l.trim() });
+              if (t && l) {
+                let s = "primary"; let label = t.trim();
+                if (label.includes("#r")) { s = "danger"; label = label.replace("#r", "").trim(); }
+                if (label.includes("#g")) { s = "success"; label = label.replace("#g", "").trim(); }
+                if (label.includes("#p")) { s = "primary"; label = label.replace("#p", "").trim(); }
+                row.push({ text: label, url: l.trim(), style: s });
+              }
             });
             if (row.length > 0) buttons.push(row);
           });
           await redis.hset(`w_temp:${ctx.from.id}`, "buttons", JSON.stringify(buttons));
         }
         await redis.del(`w_step:${ctx.from.id}`);
-        await ctx.deleteMessage().catch(() => {});
-        return render_ritual_menu(ctx, gId);
+        return ctx.reply(`${c} <b>PRONTO!</b>\nVolte ao menu e clique em <b>🔥 SELAR PACTO</b>.`, { 
+          reply_markup: { inline_keyboard: [[{ text: "📜 Voltar ao Menu", callback_data: `w_ritual_${gId}` }]] } 
+        });
       }
     }
 
