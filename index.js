@@ -394,63 +394,44 @@ if (data === "back_start") {
   }
 
   // =========================================================
-// --- [RITUAL] CONSTRUTOR DINÂMICO DIMENSÃO FANTASMA ---
+// --- [RITUAL] CONSTRUTOR DINÂMICO (PADRÃO PROFISSIONAL) ---
 // =========================================================
+
 if (data.startsWith("w_ritual_")) {
   const gId = data.replace("w_ritual_", "");
   const draft = await redis.hgetall(`w_temp:${ctx.from.id}`) || {};
   
-  // Aqui está o segredo: nomes batendo com o que você digita
+  // Status Dinâmico
   const txtStat = draft.text ? "✅ (Definido)" : "❌ (Vazio)";
   const medStat = draft.media ? "✅ (Definida)" : "❌ (Vazia)";
   const btnStat = draft.buttons ? "✅ (Definidos)" : "❌ (Vazio)";
   
-  await ctx.editMessageText(`${c} <b>CONSTRUTOR DE RECEPÇÃO</b>\n\n📜 <b>O Verbo:</b> ${txtStat}\n👁️ <b>A Visão:</b> ${medStat}\n⛓️ <b>As Correntes:</b> ${btnStat}\n\n<i>Selecione o que deseja moldar:</i>`, { 
+  await ctx.editMessageText(`${c} <b>PAINEL DO RITUAL</b>\n\n` +
+    `📜 Verbo: ${txtStat}\n👁️ Visão: ${medStat}\n⛓️ Correntes: ${btnStat}\n\n` +
+    `<i>Selecione o que deseja moldar:</i>`, { 
     parse_mode: "HTML", 
     reply_markup: { 
       inline_keyboard: [
-        [{ text: "📝 Definir Texto", callback_data: `w_edit_txt_${gId}` }], 
-        [{ text: "🖼️ Definir Mídia", callback_data: `w_edit_med_${gId}` }], 
-        [{ text: "🔘 Definir Botões", callback_data: `w_edit_btn_${gId}` }], 
-        [{ text: "🔥 SELAR PACTO (Salvar)", callback_data: `w_save_ritual_${gId}` }], 
-        [{ text: "❌ Interromper", callback_data: `cfg_welcome_${gId}` }]
+        [{ text: "📝 " + (draft.text ? "Editar Texto" : "Definir Texto"), callback_data: `w_edit_txt_${gId}` }], 
+        [{ text: "🖼️ " + (draft.media ? "Editar Mídia" : "Definir Mídia"), callback_data: `w_edit_med_${gId}` }], 
+        [{ text: "🔘 " + (draft.buttons ? "Editar Botões" : "Definir Botões"), callback_data: `w_edit_btn_${gId}` }], 
+        // Só mostra o botão de salvar se tudo estiver configurado
+        (draft.text && draft.media && draft.buttons) ? [{ text: "🔥 SELAR PACTO (Salvar)", callback_data: `w_save_ritual_${gId}` }] : [],
+        [{ text: "⬅️ Voltar", callback_data: `cfg_welcome_${gId}` }, { text: "💀 Início", callback_data: "start" }]
       ] 
     } 
   });
 }
 
+// Quando você clica em editar, o bot pede o dado E te dá opção de cancelar
 if (data.startsWith("w_edit_")) {
   const [,, type, gId] = data.split("_");
   await redis.set(`w_step:${ctx.from.id}`, `${type}:${gId}`);
-  const msgs = { txt: "o <b>TEXTO</b>", med: "a <b>MÍDIA</b> (Foto, Vídeo ou GIF)", btn: "a estrutura dos <b>BOTÕES</b>" };
-  await ctx.editMessageText(`${c} Envie agora ${msgs[type]} da recepção.\n\n<i>O Ceifador aguarda seu comando...</i>`, { 
-    parse_mode: "HTML", 
-    reply_markup: { inline_keyboard: [[{ text: "⬅️ Voltar", callback_data: `w_ritual_${gId}` }]] } 
-  });
-}
-
-if (data.startsWith("w_save_ritual_")) {
-  const gId = data.replace("w_save_ritual_", "");
-  const d = await redis.hgetall(`w_temp:${ctx.from.id}`);
-  if (!d.text) return ctx.answerCbQuery("⚠️ O Verbo (Texto) é obrigatório!");
-
-  const v = { 
-    text: d.text, 
-    media: d.media || null, 
-    type: d.type || 'text', 
-    entities: JSON.parse(d.entities || "[]"), 
-    reply_markup: d.buttons ? { inline_keyboard: JSON.parse(d.buttons) } : undefined,
-    show_caption_above_media: true // MÍDIA SEMPRE EMBAIXO
-  };
-
-  await redis.sadd(`w_list:${gId}`, JSON.stringify(v));
-  await redis.del(`w_step:${ctx.from.id}`);
-  await redis.del(`w_temp:${ctx.from.id}`);
+  const msgs = { txt: "o <b>TEXTO</b>", med: "a <b>MÍDIA</b>", btn: "os <b>BOTÕES</b> (Nome - Link)" };
   
-  await ctx.answerCbQuery("Pacto selado com sucesso!");
-  await ctx.editMessageText(`${c} <b>RITUAL CONCLUÍDO!</b>`, { 
+  await ctx.editMessageText(`${c} Envie ${msgs[type]} agora.\n\n<i>O Ceifador aguarda...</i>`, { 
     parse_mode: "HTML", 
-    reply_markup: { inline_keyboard: [[{ text: "🏠 Voltar", callback_data: `cfg_welcome_${gId}` }]] } 
+    reply_markup: { inline_keyboard: [[{ text: "❌ Cancelar e Voltar", callback_data: `w_ritual_${gId}` }]] } 
   });
 }
 
