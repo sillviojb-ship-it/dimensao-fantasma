@@ -1224,7 +1224,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
       fEnts.push({ type: 'text_link', offset: mentionIdx, length: u.first_name.length, url: `tg://user?id=${u.id}` });
     }
 
-    // CORRIGIDO: busca o emoji no texto ORIGINAL antes das substituições de tags
     const getE = (txtBtn) => {
       const offOriginal = ori.indexOf(txtBtn);
       if (offOriginal === -1) return null;
@@ -1248,11 +1247,15 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
         const eId = getE(txt);
         if (eId) {
           b.icon_custom_emoji_id = eId;
-          // CORRIGIDO: só substitui o texto se o resultado não ficar vazio
           const semEmoji = b.text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "").trim();
           if (semEmoji.length > 0) b.text = semEmoji;
         }
-        if (url.startsWith("alert:") || url.startsWith("popup:")) {
+
+        // --- AJUSTE: MOTOR DE CÓPIA NATIVA ---
+        if (url.startsWith("copy:")) {
+          b.copy_text = { text: url.replace("copy:", "") };
+        } 
+        else if (url.startsWith("alert:") || url.startsWith("popup:")) {
           const isFull = url.startsWith("alert:");
           const msg = url.replace(/alert:|popup:/, "").trim();
           const cb = `alert${isFull ? "_AL_" : "_PP_"}${Buffer.from(msg).toString('base64').slice(0, 15)}`;
@@ -1260,8 +1263,6 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
           if (redis) redis.set(`alert_msg:${cb}`, msg, 'EX', 3600);
         } else if (url.startsWith("share:")) {
           b.url = `https://t.me/share/url?url=${encodeURIComponent(url.replace("share:", ""))}`;
-        } else if (url.startsWith("copy:")) {
-          b.callback_data = `copy_${Buffer.from(url.replace("copy:", "")).toString('base64')}`;
         } else if (url === "del") {
           b.callback_data = "del_msg";
         } else {
@@ -1278,15 +1279,16 @@ if ((m.text || m.caption || "").startsWith("/say") && (await isAdmin(ctx))) {
     });
 
     const fTxt = clean.replace(/\{\[(?:#[rgp] )?(.*?) - (.*?)\]\}/g, "").replace(/\[(.*?)\]\(buttonurl(?:#\w+)?:\/\/(.*?)(?::same)?\)/g, "").trim();
-
-// Remove entities cujo offset ultrapassa o tamanho do texto final
-fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
+    fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
     
     const body = { 
-      chat_id: ctx.chat.id, text: fTxt, entities: fEnts.length > 0 ? fEnts : undefined,
+      chat_id: ctx.chat.id, 
+      text: fTxt, 
+      entities: fEnts.length > 0 ? fEnts : undefined,
       reply_to_message_id: m.reply_to_message?.message_id, 
       reply_markup: btns.length > 0 ? { inline_keyboard: btns } : undefined, 
-      show_above_text: true, expand_media_caption: true 
+      show_above_text: true, 
+      expand_media_caption: true 
     };
 
     let endP = "sendMessage";
@@ -1296,9 +1298,6 @@ fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
     } else if (m.video || m.animation) {
       endP = m.video ? "sendVideo" : "sendAnimation";
       body[m.video ? "video" : "animation"] = (m.video || m.animation).file_id;
-    } else if (m.audio || m.voice) {
-      endP = "sendAudio";
-      body[m.audio ? "audio" : "voice"] = (m.audio || m.voice).file_id;
     }
     
     if (endP !== "sendMessage") {
@@ -1308,16 +1307,23 @@ fEnts = fEnts.filter(e => e.offset + e.length <= fTxt.length);
       delete body.entities;
     }
     
-    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+    // --- CORREÇÃO DA VARIÁVEL DE RESPOSTA ---
+    const res = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/${endP}`, {
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify(body)
     });
-const resultado = await resposta.json();
-console.log("SAY RESULTADO:", JSON.stringify(resultado));
-console.log("SAY BODY:", JSON.stringify(body));
+
+    const resultado = await res.json();
+    console.log("SAY STATUS:", resultado.ok ? "Sucesso" : "Erro");
+
     await ctx.deleteMessage().catch(() => {});
-  } catch (err) { console.log("Erro no Say:", err.message); }
+  } catch (err) { 
+    console.log("Erro no Say:", err.message); 
+  }
   return;
 }
+
 // =======================
 // COMANDO: /warn (NOVO)
 // =======================
